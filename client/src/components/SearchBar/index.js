@@ -1,17 +1,19 @@
 // import axios from 'axios'
+import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 
+
 function SearchBar() {
     const location = useLocation();
-    const [searchOption, setSearchOption] = useState("title")
+    const [searchOption, setSearchOption] = useState("all")
     const [searchText, setSearchText] = useState("")
     const navigate = useNavigate();
 
     useEffect(() => {
-        setSearchOption("title");
+        setSearchOption("all");
         if(!(location.pathname + location.search).includes("?")){
             setSearchText("")
         };
@@ -37,31 +39,25 @@ function SearchBar() {
     function search(){
         console.log(searchText, searchOption)
     
-        let body = "";
+        let body = "/products?name=";
         let option = searchOption;
+        let url;
+        
+        if(option === "all"){
+            url = body + searchText;
+        }
 
-        if(searchOption === "title"|| searchOption === "genre" || searchOption === "minrating" || searchOption === "year"){
-            body = "/movies?";
+        else if(option === "inStock"){
+            url = body + searchText + "&" + option + "=true";
         }
-    
-        else if(searchOption === "people"){
-            body = "/people?";
-            option = "name";
-        }
-    
-        else if(searchOption === "users"){
-            body = "/users?";
-            option = "username";
-        }
-    
-        let url = body + option + "=" + searchText;
+         
         console.log(url);
-        // setSearchText("");
-        // axios.get(url).then( res => {
-        //     navigate(url);
-        //     console.log(res.data);
-           
-        // })
+
+        setSearchText("");
+        axios.get(url).then( res => {
+            navigate(url);
+            console.log(res.data);         
+        })
     }
 
   return (

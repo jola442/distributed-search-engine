@@ -1,0 +1,14 @@
+.product-container{
+    margin-top:74px;
+    padding-left: 20px;
+    font-size: 2em;
+}
+
+.add-review{
+    font-size: 1em;
+}
+
+.product-container input{
+    font-size: 1em;
+    text-align: center;
+}

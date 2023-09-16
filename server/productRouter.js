@@ -27,7 +27,7 @@ router.post("/:id/reviews", createReview);
 function respondWithProducts(req, res){
     let results = [];
     if(req.query.name){
-        results = products.filter( (product) => (product.name === req.query.name));
+        results = products.filter( (product) => (product.name.toLowerCase().includes(req.query.name.toLowerCase())));
     }
 
     else{
@@ -35,11 +35,13 @@ function respondWithProducts(req, res){
     }
 
     if(req.query.inStock){
-        results = products.filter( (product) => (product.stock > 0));
+        if(req.query.inStock === "true"){
+            results = results.filter( (product) => (product.stock > 0));
+        }
     }
 
 
-    if(results.length > 1){
+    if(results.length > 0){
         res.status(200).json(results);
     }
 
@@ -51,6 +53,10 @@ function respondWithProducts(req, res){
 
 
 function isValidProduct(product){
+    if(!product){
+        return false;
+    }
+
     let isPriceValid = !(Number.isNaN(Number(product.price)));
     let isStockValid = !(Number.isNaN(Number(product.stock)));
     let isDimensionsXValid = !(Number.isNaN(Number(product.dimensions.x)));
@@ -70,7 +76,7 @@ function createProduct(req, res){
 
     let newProductID = products[products.length-1].id + 1;
     products.push({name:req.body.name, price:req.body.price, stock:req.body.stock, dimensions:req.body.dimensions, id: newProductID});
-    res.status(200).send("Product added successfully");
+    res.status(201).json(products[products.length-1]);
 }
 
 // 3. A way to retrieve and view a specific product (i.e., by ID), which must show all of that
@@ -131,9 +137,16 @@ function createReview(req, res){
 function respondWithReviews(req, res){
     let reviews = [];
     for(let i = 0; i < products.length; ++i){
-        if(products[i] === Number(req.params.id)){
+        if(products[i].id === Number(req.params.id)){
             reviews = products[i].reviews;
-            res.status(200).json(reviews);
+            if(reviews){
+                res.status(200).json(reviews);
+            }
+
+            else{
+                res.status(200).json([]);
+            }
+ 
             return;
         }
 

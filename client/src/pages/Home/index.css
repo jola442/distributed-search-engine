@@ -1,0 +1,13 @@
+.home-container{
+    margin-top: 74px;
+    padding-left: 20px;
+    font-size: 2em;
+}
+
+.home-container input{
+    font-size: 1em;
+}
+
+.home-container button{
+    font-size: 1em;
+}

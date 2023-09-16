@@ -3,16 +3,17 @@
 
 html{
   height: 100%;
-  background: linear-gradient(var(--complementary-colour-white), var(--complementary-colour-lavender));
-  background-attachment: fixed;
+  /* background: linear-gradient(var(--complementary-colour-white), var(--complementary-colour-lavender));
+  background-attachment: fixed; */
   overflow-y: scroll;
 }
 
 :root{
-  --dominant-colour:rgb(26,26,26);
+  --dominant-colour:black;
   --complementary-colour-lavender:#8685EF;
   --complementary-colour-white:#FAF8FF;
   --complementary-colour-green:#D3FBD8;
+  --complementary-colour-grey:grey;
   --main-font:Garamond, serif;
   --main-font-weight:800;
   
@@ -52,7 +53,7 @@ h1{
   position:fixed;
   width:100%;
   background-color:var(--dominant-colour);
-  color:var(--complementary-colour-lavender);
+  color:var(--complementary-colour-white);
   padding: 0;
   margin: 0;
   top:0.5em;
@@ -71,11 +72,11 @@ h1{
 }
 
 .mobile-navList li:visited{
-  color:var(--complementary-colour-lavender);
+  color:var(--complementary-colour-white);
 }
 
 .mobile-navList a{
-  color:var(--complementary-colour-lavender);
+  color:var(--complementary-colour-white);
   font-size: 1.5em;
   font-weight: bold;
 }
@@ -84,10 +85,10 @@ h1{
   background-color:var(--dominant-colour);
   display:flex;
   justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
   position: fixed;
   width:100%;
-  padding-bottom: 10px;
   z-index: 4;
   height: 64px;
 }
@@ -118,7 +119,7 @@ h1{
 
 .mobile-nav li a{
   height: 100%;
-  color:var(--complementary-colour-lavender);
+  color:var(--complementary-colour-white);
   transition:color 0.3s ease-in;
   border-radius: 5px;
 } */ */
@@ -205,12 +206,12 @@ select{
   color: var(--complementary-colour-white);
   border:0;
   outline:0;
-  background-color: var(--complementary-colour-lavender);
+  background-color: var(--complementary-colour-grey);
 }
 
 option{
-  background-color: var(--complementary-colour-white);
-  color:var(--complementary-colour-lavender);
+  background-color: var(--complementary-colour-grey);
+  color:var(--complementary-colour-white);
   border-radius: 0;
 }
 
@@ -239,7 +240,7 @@ i{
 }
 
 .nav-icon{
-  color:var(--complementary-colour-lavender)
+  color:var(--complementary-colour-white)
 }
 
 
@@ -298,7 +299,7 @@ i{
   
   .desktop-nav li a{
     height: 100%;
-    color:var(--complementary-colour-lavender);
+    color:var(--complementary-colour-white);
     transition:color 0.3s ease-in;
     border-radius: 5px;
   }
@@ -311,4 +312,5 @@ i{
   .desktop-nav li a:hover{
     color:#A8AABC;
   }
+
 }

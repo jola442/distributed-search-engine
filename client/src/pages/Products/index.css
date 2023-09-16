@@ -1,0 +1,21 @@
+.products-container{
+    margin-top: 74px;
+    display: flex;
+    flex-direction: column;
+    gap:1em;
+    padding-left: 20px;
+}
+
+.products-container a{
+    color:black;
+    font-size: 2em;
+    transition: color 0.3s ease-in-out;
+}
+
+.products-container a:hover{
+    color:blue;
+}
+
+.products-container a:visited{
+    color:black;
+}
