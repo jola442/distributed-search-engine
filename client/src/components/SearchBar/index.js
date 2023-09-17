@@ -57,6 +57,9 @@ function SearchBar() {
         axios.get(url).then( res => {
             navigate(url);
             console.log(res.data);         
+        }).catch( (err) => {
+            navigate(url);
+            console.log(err)
         })
     }
 

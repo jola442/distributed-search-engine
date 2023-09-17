@@ -16,6 +16,7 @@ function Products() {
       setProducts(res.data);
     }).catch((err) => {
       console.log(err.response.data);
+      setProducts([])
     })
   }, [location])
   
@@ -27,9 +28,9 @@ function Products() {
     <>
       <MobileNavbar></MobileNavbar>
       <div className='products-container'>
-        {products.map ( (product) => (
+        {products.length > 0?products.map ( (product) => (
           <Link to={"/products/"+ product.id} key={uuidv4()}>{product.name}</Link>
-        ))}
+        )):<p><b>No results</b></p>}
 
       </div>
     </>
