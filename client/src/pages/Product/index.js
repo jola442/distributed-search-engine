@@ -7,6 +7,7 @@ import MobileNavbar from '../../components/MobileNavbar';
 function Product() {
   const [product, setProduct] = useState(null);
   const [review, setReview] = useState(null);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -14,11 +15,20 @@ function Product() {
     axios.get(location.pathname + location.search).then( res => {
       console.log(res.data);
       setProduct(res.data);
+    }).catch((err) => {
+      setError(err.response.data);
     })
   }, [location])
   
   if(!product){
+    if(error){
+      return <>
+      <MobileNavbar></MobileNavbar>
+      <p className='no-results'>{error}</p>
+    </>
+    }
     return null;
+    // return <p className='no-results'>This product does not exist</p>;
   }
 
   function addReview(){
@@ -58,6 +68,7 @@ function Product() {
         <Link to={location.pathname+"/reviews"}>View Reviews</Link><br></br>
         <button name="add-review" className='add-review' onClick={addReview}>Add Review</button>
         <input type="text" id="review" name="review" placeholder='1-10' onChange={ (e) => {setReview(e.target.value)}}></input>
+
       </div>
     </>
 

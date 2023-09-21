@@ -8,9 +8,9 @@ import axios from 'axios'
 
 
 function Home() {
-  const [name, setName] = useState(null);
-  const [price, setPrice] = useState(null);
-  const [stock, setStock] = useState(null);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
   const [dimensions, setDimensions] = useState({})
   const navigate = useNavigate();
 
@@ -48,11 +48,11 @@ function Home() {
         <span><b>Stock: </b></span>
         <input type='text' name="price" id="price" value={price} onChange={(e) => {setPrice(e.target.value)}}></input><br></br>
         <span><b>X Dimension: </b></span>
-        <input type='text' name="x" id="x" value={dimensions.x} onChange={handleChange}></input><br></br>
+        <input type='text' name="x" id="x" value={dimensions.x||""} onChange={handleChange}></input><br></br>
         <span><b>Y Dimension: </b></span>
-        <input type='text' name="y" id="y" value={dimensions.y} onChange={handleChange}></input><br></br>
+        <input type='text' name="y" id="y" value={dimensions.y||""} onChange={handleChange}></input><br></br>
         <span><b>Z Dimension: </b></span>
-        <input type='text' name="z" id="z" value={dimensions.z} onChange={handleChange}></input><br></br>
+        <input type='text' name="z" id="z" value={dimensions.z||""} onChange={handleChange}></input><br></br>
         <button className='create-product' onClick={createProduct}>Create Product</button>
       </div>
 

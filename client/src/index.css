@@ -10,9 +10,7 @@ html{
 
 :root{
   --dominant-colour:black;
-  --complementary-colour-lavender:#8685EF;
   --complementary-colour-white:#FAF8FF;
-  --complementary-colour-green:#D3FBD8;
   --complementary-colour-grey:grey;
   --main-font:Garamond, serif;
   --main-font-weight:800;
@@ -153,7 +151,6 @@ h1{
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 50%;
   font-size: 2em;
 }
 
