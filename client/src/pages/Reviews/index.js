@@ -13,7 +13,7 @@ function Reviews() {
     useEffect(() => {
         axios.get(location.pathname).then(res => {
             console.log(res.data);
-            setReviews(res.data);
+            setReviews(res.data.reviews);
         }).catch( (err) => {
             setError(err.response.data);
         })

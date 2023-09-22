@@ -49,7 +49,7 @@ function Product() {
       <MobileNavbar></MobileNavbar>
       <div className='product-container'>
         <p><b>Name: </b>{product.name}</p>
-        <p><b>ID: </b> {product.id}</p>
+        <p><b>ID: </b> {product._id}</p>
         <p><b>Price: </b> {product.price}</p>
         <p><b>Dimensions: </b> {"x: " + product.dimensions.x + " y: " + product.dimensions.y + " z: " + product.dimensions.z}</p>
         <p><b>Stock: </b>{product.stock}</p>
