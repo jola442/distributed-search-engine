@@ -29,7 +29,7 @@ function Home() {
   function createProduct(){
     axios.post("/products", {name, price, stock, dimensions:{x:dimensions.x, y: dimensions.y, z:dimensions.z}}).then(res => {
       if(res.status === 201){
-        navigate("/products/" + res.data.id)
+        navigate("/products/" + res.data._id)
       }
     }).catch(err => {
       alert(err.response.data)

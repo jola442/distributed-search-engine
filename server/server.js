@@ -1,13 +1,34 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-let productRouter = require("./productRouter");
+const productRouter = require("./productRouter");
+const orderRouter = require("./orderRouter")
+
+const mongoose = require("mongoose");
+const uri = "mongodb://127.0.0.1/eCommerceDB" 
+
+mongoose.connect(uri, {useNewUrlParser:true});
+db = mongoose.connection;
+
+db.on("connected", function(){
+    console.log("Database is connected successfully")
+})
+
+db.on("disconnected", function(){
+    console.log("Database is disconnected successfully")
+})
+
+db.on("error", console.error.bind(console, "connectection error:"));
+
 
 
 app.listen(process.env.PORT || 5000);
 app.use(express.json());
+
+
 // app.use(cors());
 app.use("/products", productRouter);
+app.use("/orders", orderRouter)
 
 
 
