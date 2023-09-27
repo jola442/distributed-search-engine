@@ -1,6 +1,8 @@
 const Product = require("./ProductModel")
+const Order = require('./OrderModel');
 const products = require("./products.json");
 let productsInserted = 0;
+let ordersInserted = 0;
 
 const mongoose = require("mongoose");
 const uri = "mongodb://127.0.0.1/eCommerceDB" 
@@ -35,9 +37,24 @@ async function main(){
         for(let i = 0; i < products.length; ++i){
             delete products[i].id;
             let prod = new Product(products[i]);
+            const productsArr = [
+                {
+                productID: prod._id,
+                quantity: 2
+                },
+            ]
+    
+            const order1 = new Order({
+                name: "Stephen",
+                products: productsArr
+            });
+            await order1.save();
+            ordersInserted++;
             await prod.save();
             productsInserted++;
         }
+        
+
     }
 
     catch(err){
@@ -46,6 +63,7 @@ async function main(){
 
     finally{
         console.log("Inserted", productsInserted, "products");
+        console.log("Inserted", ordersInserted, "orders");
         return;
     }
 }
