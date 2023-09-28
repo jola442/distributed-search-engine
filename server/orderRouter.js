@@ -60,7 +60,7 @@ async function createOrder(req, res) {
     const orderData = req.body;
 
     // Check if the order is valid
-    const validationMessage = isValidOrder(orderData);
+    const validationMessage = await isValidOrder(orderData);
     if (validationMessage) {
       res.status(409).json({ error: validationMessage });
       return;
