@@ -2,21 +2,21 @@ const express = require('express');
 const Page = require('./pageModel');
 let router = express.Router();
 
-
-router.get("/:id", respondWithPage);
 router.get("/popular", respondWithPopularPages);
+router.get("/:id", respondWithPage);
 
-
-
-
-async function respondWithPage(){
+async function respondWithPage(req, res){
     const pageId = req.params.id;
+    console.log(pageId)
     try{
-        const page = await page.findById(pageId);
+        const page = await Page.findById(pageId);
+
         if(!page){
-            return res.status(404).json({error: 'the page cannot be found'});
+            res.status(404).json({error: 'the page cannot be found'});
+            return;
         }
 
+        console.log(page);
         //JSON with the neccessary information
         const response = {
             url: page.url,
@@ -51,7 +51,7 @@ async function respondWithPopularPages(req, res) {
         incomingLinks: page.incomingLinksCount,
       }));
   
-      res.json(response);
+      res.status(200).json(response);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'server error' });
