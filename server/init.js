@@ -16,8 +16,8 @@ mongoose.connect(uri, {useNewUrlParser:true});
 db = mongoose.connection;
 let initialPage = 'https://people.scs.carleton.ca/~davidmckenney/fruitgraph/N-0.html';
 // let initialPage = "https://people.scs.carleton.ca/~davidmckenney/tinyfruits/N-0.html"
-let crawledPages = new Set();  //used to keep track of what pages have been crawled
-let crawledPageList = [];
+let crawledPages = new Set();  //used to keep track of what pages have been crawled. O(1) access
+let crawledPageList = [];  //used to determine whether a page has been crawled more than once
 
 db.on("connected", function(){
     console.log("Database is connected successfully")
@@ -34,11 +34,14 @@ db.once('open', async function() {
       await mongoose.connection.db.dropDatabase();
       console.log("Dropped database. Starting re-creation.");
       await main();
-      await crawler.queue(initialPage);
     //   await crawlPages();
     } catch (err) {
       console.error("Error dropping or recreating database:");
       console.error(err);
+    }
+
+    finally{
+        return;
     }
 });
 
@@ -53,9 +56,8 @@ async function handleCurrentPage(error, res, done) {
         console.log(error);
     }else{
         try{
-   
             //extract the data from the current page
-            let $ = res.$; //get cheerio data, see cheerio docs for info
+            let $ = res.$;
             let currentURL = res.request.uri.href;    //current page's URL
             let title = $("title").text();
             let pText = $("p").text();
@@ -103,6 +105,7 @@ async function handleCurrentPage(error, res, done) {
 
             currPage = await Page.findOneAndUpdate({url:currentURL}, {outgoingLinks},{upsert:true, new:true});
             
+            //BFS - add all the outgoing links of the current page to the queue
             for(let i = 0; i < outgoingURLs.length; ++i){
                 let outgoingURL = outgoingURLs[i];
                 if(outgoingURL && !crawledPages.has(outgoingURL)){
@@ -126,7 +129,7 @@ async function handleCurrentPage(error, res, done) {
 crawler.on('drain', async function(){
     let results = await Page.find();
     console.log("There are " + results.length + " pages in the database");
-    console.log("Only pages" + crawledPageList.length + " were crawled")
+    console.log("Only " + crawledPageList.length + " were crawled")
 });
 
 async function main(){
@@ -150,6 +153,7 @@ async function main(){
             await prod.save();
             productsInserted++;
         }
+        crawler.queue(initialPage);
         
 
     }
