@@ -18,12 +18,12 @@ const pageSchema = new mongoose.Schema({
 
   outgoingLinks: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Page', // Reference to the Page model
+    ref: 'Page'
   }],
 
   incomingLinks: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Page', // Reference to the Page model
+    ref: 'Page'
   }],
 });
 
