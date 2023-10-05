@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "crawler": "^1.4.0",
     "mongoose": "^7.5.2"
   }
 }
