@@ -11,6 +11,11 @@ export default function MobileNavbar() {
         setNavLinksVisible(!navLinksVisible)
     }
 
+    
+    function toggleNavLinkVisibility(isNavLinkVisible){
+        setNavLinksVisible(isNavLinkVisible);
+    }
+
   return (
     <>
     <nav className="mobile-nav">
@@ -30,7 +35,7 @@ export default function MobileNavbar() {
         </div>}
         {/* {navLinksVisible && <NavLinks/>} */}
     </nav>
-    <NavLinks isMobile={true} isVisible={navLinksVisible}></NavLinks>
+    <NavLinks isMobile={true} isVisible={navLinksVisible} toggleNavLinkVisibility={toggleNavLinkVisibility}></NavLinks>
     </>
 
     
