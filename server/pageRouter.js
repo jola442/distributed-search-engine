@@ -2,8 +2,16 @@ const express = require('express');
 const Page = require('./pageModel');
 let router = express.Router();
 
+router.get("/", respondWithPages);
 router.get("/popular", respondWithPopularPages);
 router.get("/:id", respondWithPage);
+
+async function respondWithPages(req, res){
+  let queryText = req.params.text;         // the search text the user is querying
+  //find the documents in the database that contain queryText in page.content.pText, where page is a document from the database
+  //perform the indexing according to the elasticlunr example Dave gave on these documents
+  //return [{url: http://example.com, title: sampleTitle, searchScore: 2.4}], top 10 sorted searchScore
+}
 
 async function respondWithPage(req, res){
     const pageId = req.params.id;
