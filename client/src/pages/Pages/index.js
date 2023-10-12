@@ -29,11 +29,11 @@ function Pages() {
       <MobileNavbar></MobileNavbar>
       <div className='pages-container'>
         {pages.length > 0?pages.map ( (page) => (
-          <>
-            <p>{page.title}</p>
-            <Link to={page.url} key={uuidv4()}>{page.url}</Link>
-            <p>{page.searchScore}</p>
-          </>
+          <div key={uuidv4()} >
+            <p><b>Title: </b>{page.title}</p>
+            <Link to={page.url} target="_blank" rel="noreferrer noopener"><b>URL: </b>{page.url}</Link>
+            <p><b>Score: </b>{page.score}</p>
+          </div>
    
           
         )):<p><b>No results</b></p>}
