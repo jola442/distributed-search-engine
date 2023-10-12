@@ -50,6 +50,11 @@ function SearchBar() {
         else if(option === "inStock"){
             url = body + searchText + "&" + option + "=true";
         }
+
+        else if(option === "pages"){
+            body = "/pages?text="
+            url  = body + searchText;
+        }
          
         console.log(url);
 
@@ -66,8 +71,9 @@ function SearchBar() {
   return (
     <div className='search-bar'>
         <select value={searchOption} id="search-options" name="search-options" onChange={handleSearchOptionChanged}>
-            <option value="all">All</option>
-            <option value='inStock'>In Stock</option>  
+            <option value="all">All Products</option>
+            <option value='inStock'>In Stock Products</option>
+            <option value='pages'>Pages</option>  
         </select>
 
         <div className='search-textbox-div'>

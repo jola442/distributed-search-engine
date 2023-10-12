@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react'
 import { NavLink, useNavigate } from "react-router-dom"
 // import axios from "axios";
 
-export default function NavLinks( {isMobile, isVisible}) {
+export default function NavLinks( {isMobile, isVisible, toggleNavLinkVisibility}) {
   const visibleNavLinkStyle = {
     transform:"translateY(0)",
     transition:"transform 0.5s ease-in-out"
@@ -25,6 +25,11 @@ export default function NavLinks( {isMobile, isVisible}) {
       return null;
     }
   }
+
+  function toggleVisibility(){
+    toggleNavLinkVisibility(false);
+  }
+
 
 
   return (
