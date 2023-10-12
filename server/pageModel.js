@@ -28,5 +28,6 @@ const pageSchema = new mongoose.Schema({
 });
 
 const Page = mongoose.model('Page', pageSchema);
+pageSchema.index({ 'content.pText': 'text' });
 
 module.exports = Page;

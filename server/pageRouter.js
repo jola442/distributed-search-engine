@@ -10,11 +10,13 @@ router.get("/:id", respondWithPage);
 async function respondWithPages(req, res){
   let queryText = req.query.text;
 
-  const results = await Page.find({ 'content.pText': { $regex: new RegExp(queryText, 'i') } });
+  const results = await Page.find({ $text: { $search: queryText } }).exec();
+
   console.log('results:', results.length);  
   try{
     const index = elasticlunr(function () {
       this.addField('url');
+      this.addField("content.title")
       this.addField('content.pText');
       this.setRef('url');
     });
@@ -22,13 +24,24 @@ async function respondWithPages(req, res){
       const doc = {
         url: result.url, // Replace 'url' with the actual field name in your result object
         "content.pText": result.content.pText, // Replace 'content' with the actual field name in your result object
+        "content.title": result.content.title
       };
       index.addDoc(doc);
      
     });
 
     let response = index.search(queryText, {}).sort( (a, b) => b.score - a.score).slice(0,10);
+    const promises = response.map(async (entry) => {
+      let contentObj = await Page.findOne({ url: entry.ref }).select("content.title -_id").exec();
+      entry.title = contentObj.content.title;
+      entry.url = entry.ref;
+      delete entry.ref;
+      return entry;
+    });
 
+    // Wait for all promises to resolve
+    const resolvedResponse = await Promise.all(promises);
+    console.log("Response",response)
     res.status(200).json(response);
 } catch (error) {
   console.error(error);
