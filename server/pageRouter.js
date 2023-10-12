@@ -15,16 +15,13 @@ async function respondWithPages(req, res){
   console.log('results:', results.length);  
   try{
     const index = elasticlunr(function () {
-      this.addField('url');
-      this.addField("content.title")
       this.addField('content.pText');
       this.setRef('url');
     });
     results.forEach((result) => {
       const doc = {
-        url: result.url, // Replace 'url' with the actual field name in your result object
-        "content.pText": result.content.pText, // Replace 'content' with the actual field name in your result object
-        "content.title": result.content.title
+        url: result.url,
+        "content.pText": result.content.pText, 
       };
       index.addDoc(doc);
      
@@ -39,7 +36,6 @@ async function respondWithPages(req, res){
       return entry;
     });
 
-    // Wait for all promises to resolve
     const resolvedResponse = await Promise.all(promises);
     console.log("Response",response)
     res.status(200).json(response);
