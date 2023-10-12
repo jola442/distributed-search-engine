@@ -1,0 +1,25 @@
+.pages-container{
+    margin-top: 74px;
+    display: flex;
+    flex-direction: column;
+    gap:1em;
+    padding-left: 20px;
+}
+
+.pages-container p {
+    font-size: 2em;
+}
+
+.pages-container a{
+    color:black;
+    font-size: 2em;
+    transition: color 0.3s ease-in-out;
+}
+
+.pages-container a:hover{
+    color:blue;
+}
+
+.pages-container a:visited{
+    color:black;
+}
