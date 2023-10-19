@@ -131,7 +131,6 @@ crawler.on('drain', async function(){
     let results = await Page.find();
     console.log("There are " + results.length + " pages in the database");
     console.log("Only " + crawledPageList.length + " were crawled")
-    updatePageRank()
 });
 
 async function main(){
@@ -172,84 +171,3 @@ async function main(){
     }
 }
 
-async function updatePageRank(){
-    let pages = await Page.find().select("-content.pText -incomingLinks");
-    let numPages = pages.length;
-    // console.log(pages)
-    let twoDList = []
-    for(let i = 0; i < numPages; ++i){
-        let row = []
-        for(let j = 0; j < numPages; ++j){
-            if(i == j){
-                row.push(0)
-            }
-
-            else{
-                if(pages[i].outgoingLinks.includes(pages[j]._id)){
-                    row.push(1)
-                }
-
-                else{
-                    row.push(0)
-                }
-            }
-        }
-        // console.log("row before normalization:", row)
-        if(row.every( (entry) => (entry === 0))){
-            row = row.map( () => (1/pages.length));
-        }
-
-        else{
-            let one_count = 0
-            row.forEach( (entry) => {
-                if(entry === 1){
-                    one_count++;
-                }
-            })
-            row = row.map( (entry) => {
-                if(entry === 1){
-                    // console.log("Entry:",entry)
-                    // console.log("One Count:",one_count)
-                    entry = 1/one_count;
-                }
-                return entry;
-            })
-            // console.log("row after normalization:", row)
-        }
-        twoDList.push(row)
-    }
-
-    const A = new Matrix(twoDList);
-    let alpha = 0.1
-    let ones_matrix = new Matrix(numPages, numPages).fill(1);
-    P =  (1-alpha) * A + alpha * ones_matrix/numPages
-
-
-    let euclideanDistance = -1;
-    let previous = new Matrix([[1, 0, 0]]);
-    let current = new Matrix([[1, 0, 0]]); //([1/6, 2/3, 1/6])
-    //let euclideanDistance = (a, b) =>
-    //  Math.hypot(...Object.keys(a).map(k => b[k] - a[k]))
-
-
-    while (euclideanDistance < 0.00001){
-    current = previous.mmul(P);
-    console.log("previous");
-    console.log(previous);
-    console.log("current");
-    console.log(current);
-    euclideanDistance = eucFunc(previous.data, current.data);
-    console.log(euclideanDistance);
-    previous = current;
-    console.log("next iteration");
-
-
-
-    }
-    //console.log(euclideanDistance);
-
-
-    function eucFunc(a, b) {
-    return Math.hypot(...a.map((row, i) => Math.hypot(...row.map((val, j) => b[i][j] - val))));
-    }
-}
