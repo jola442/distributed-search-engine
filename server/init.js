@@ -225,15 +225,31 @@ async function updatePageRank(){
     P =  (1-alpha) * A + alpha * ones_matrix/numPages
 
 
-    //Other's parts
+    let euclideanDistance = -1;
+    let previous = new Matrix([[1, 0, 0]]);
+    let current = new Matrix([[1, 0, 0]]); //([1/6, 2/3, 1/6])
+    //let euclideanDistance = (a, b) =>
+    //  Math.hypot(...Object.keys(a).map(k => b[k] - a[k]))
 
 
-    //initialize euclidean_distance, current, prev
+    while (euclideanDistance < 0.00001){
+    current = previous.mmul(P);
+    console.log("previous");
+    console.log(previous);
+    console.log("current");
+    console.log(current);
+    euclideanDistance = eucFunc(previous.data, current.data);
+    console.log(euclideanDistance);
+    previous = current;
+    console.log("next iteration");
 
-    //pi_init = 1 x N matrix where the entire row sums up to 1
 
-    //while (euclidean distance < 0.0001):
-        //prev = current
-        //current = pi_init * P (matrix multiplication)
-        //euclidean_distance = calculate between current and previous
+
+    }
+    //console.log(euclideanDistance);
+
+
+    function eucFunc(a, b) {
+    return Math.hypot(...a.map((row, i) => Math.hypot(...row.map((val, j) => b[i][j] - val))));
+    }
 }
