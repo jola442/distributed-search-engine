@@ -155,6 +155,7 @@ async function main(){
             productsInserted++;
         }
         crawler.queue(initialPage);
+
         
 
     }
@@ -170,36 +171,3 @@ async function main(){
     }
 }
 
-function updatePageRank(){
-    //Jola's part
-    
-
-
-    let euclideanDistance = -1;
-    let previous = new Matrix([[1, 0, 0]]);
-    let current = new Matrix([[1, 0, 0]]); //([1/6, 2/3, 1/6])
-    //let euclideanDistance = (a, b) =>
-    //  Math.hypot(...Object.keys(a).map(k => b[k] - a[k]))
-
-
-    while (euclideanDistance < 0.00001){
-    current = previous.mmul(P);
-    console.log("previous");
-    console.log(previous);
-    console.log("current");
-    console.log(current);
-    euclideanDistance = eucFunc(previous.data, current.data);
-    console.log(euclideanDistance);
-    previous = current;
-    console.log("next iteration");
-
-
-
-    }
-    //console.log(euclideanDistance);
-
-
-    function eucFunc(a, b) {
-    return Math.hypot(...a.map((row, i) => Math.hypot(...row.map((val, j) => b[i][j] - val))));
-    }
-}
