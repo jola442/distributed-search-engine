@@ -5,6 +5,7 @@ const Page = require("./pageModel");
 const path = require('path');
 const mongoose = require("mongoose");
 const Crawler = require("crawler");
+const {Matrix} = require("ml-matrix");
 
 const uri = "mongodb://127.0.0.1/eCommerceDB"
 let productsInserted = 0;
@@ -169,3 +170,20 @@ async function main(){
     }
 }
 
+function updatePageRank(){
+    //Jola's part
+    
+
+
+    //Other's parts
+
+
+    //initialize euclidean_distance, current, prev
+
+    //pi_init = 1 x N matrix where the entire row sums up to 1
+
+    //while (euclidean distance < 0.0001):
+        //prev = current
+        //current = pi_init * P (matrix multiplication)
+        //euclidean_distance = calculate between current and previous
+}
