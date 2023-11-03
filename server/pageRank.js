@@ -21,7 +21,8 @@ db.on("error", console.error.bind(console, "connectection error:"));
 
 db.once('open', async function() {
     try {
-        updatePageRank()
+        updatePageRank("fruits")
+        updatePageRank("personal")
     } catch (err) {
       console.error("Error dropping or recreating database:");
       console.error(err);
@@ -32,8 +33,8 @@ db.once('open', async function() {
     }
 });
 
-async function updatePageRank(){
-    let pages = await Page.find().select("-content.pText -incomingLinks");
+async function updatePageRank(type){
+    let pages = await Page.find({type}).select("-content.pText -incomingLinks");
     let numPages = pages.length;
     // console.log(pages)
     let twoDList = []
@@ -80,19 +81,24 @@ async function updatePageRank(){
         twoDList.push(row)
     }
 
+    //numPages x numPages matrix
     const A = new Matrix(twoDList);
     let alpha = 0.1
+    // numPages x numPages matrix
     let ones_matrix = new Matrix(numPages, numPages).fill(1);
+
+    //numPages x numPages matrix
     P = A.mul(1 - alpha).add(ones_matrix.mul(alpha / numPages));
 
+    //1 x numPages matrix
     let pi_init = Matrix.zeros(1, numPages)
 
     // Generate random row and column indices
-    const randomRowIndex = Math.floor(Math.random() * 1);
+    // const randomRowIndex = Math.floor(Math.random() * 1);
     const randomColIndex = Math.floor(Math.random() * numPages);
 
     // Set the random value to 1
-    pi_init.set(randomRowIndex, randomColIndex, 1);
+    pi_init.set(0, randomColIndex, 1);
 
     // console.log("pi_init", pi_init)
     let euclideanDistance = 1;
@@ -119,8 +125,17 @@ async function updatePageRank(){
     let pageResults = []
 
     for(let i = 0; i < pages.length; ++i){
-        page = pages[i]
-        pageResults[i] = {url: pages[i].url, pageRankVal: current.get(0,i)}
+        try{
+            await Page.findOneAndUpdate({url:pages[i].url}, {pageRank:current.get(0, i)});
+            page = pages[i]
+            pageResults[i] = {url: pages[i].url, pageRankVal: current.get(0,i)}
+        }
+
+        catch(err){
+            console.log(err);
+        }
+        // page = pages[i]
+        // pageResults[i] = {url: pages[i].url, pageRankVal: current.get(0,i)}
     }
 
     pageResults = pageResults.sort( (a, b) => (b.pageRankVal-a.pageRankVal)).slice(0,25)

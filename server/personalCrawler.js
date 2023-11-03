@@ -8,14 +8,10 @@ const Crawler = require("crawler");
 const {Matrix} = require("ml-matrix");
 
 const uri = "mongodb://127.0.0.1/eCommerceDB"
-let productsInserted = 0;
-let ordersInserted = 0;
-
- 
 
 mongoose.connect(uri, {useNewUrlParser:true});
 db = mongoose.connection;
-let initialPage = "https://en.wikipedia.org/wiki/2023%E2%80%9324_Premier_League"
+let initialPage = "https://en.wikipedia.org/wiki/Eden_Hazard"
 // let initialPage = "https://people.scs.carleton.ca/~davidmckenney/tinyfruits/N-0.html"
 let crawledPages = new Set();  //used to keep track of what pages have been crawled. O(1) access
 let crawledPageList = [];  //used to determine whether a page has been crawled more than once
@@ -33,8 +29,8 @@ db.on("error", console.error.bind(console, "connectection error:"));
 
 db.once('open', async function() {
     try {
-      await mongoose.connection.db.dropDatabase();
-      console.log("Dropped database. Starting re-creation.");
+    //   await mongoose.connection.db.dropDatabase();
+    //   console.log("Dropped database. Starting re-creation.");
       await main();
     //   await crawlPages();
     } catch (err) {
@@ -48,8 +44,8 @@ db.once('open', async function() {
 });
 
 const crawler = new Crawler({
-    // maxConnections : 1, //connections in parallel
-    rateLimit: 10000,
+    maxConnections : 10, //connections in parallel
+    // rateLimit: 10000,
     callback : handleCurrentPage
 });
 
@@ -67,7 +63,7 @@ async function handleCurrentPage(error, res, done) {
             let currentURL = res.request.uri.href;    //current page's URL
             let title = $("title").text();
             let pText = $("p").text();
-            pTextList.push(pText);
+            // console.log(iteration, pText);
             let links = $("a");   //an array of <a> DOM elements in the current page
             let outgoingLinks = [];   //an array that will contain the object IDs of each outgoing link of this page in the database
             let outgoingURLs = []   //an array that will contain the URLs of each outgoing link of this page in the database
