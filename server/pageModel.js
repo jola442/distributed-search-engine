@@ -6,9 +6,19 @@ const pageSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+
+  type:{
+    type:String,
+    required:true,
+    default:"fruits",
+    enum: ["fruits", "personal"]
+  },
  
   content: {
-    title: String,
+    title: {
+      type:String,
+      default:""
+    },
     pText:{  //text in <p></p>
         type:String,
         default:""
@@ -25,6 +35,10 @@ const pageSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Page'
   }],
+
+  pageRank:{
+    type:Number
+  }
 });
 
 const Page = mongoose.model('Page', pageSchema);
