@@ -15,10 +15,11 @@ let ordersInserted = 0;
 
 mongoose.connect(uri, {useNewUrlParser:true});
 db = mongoose.connection;
-let initialPage = 'https://people.scs.carleton.ca/~davidmckenney/fruitgraph/N-0.html';
+let initialPage = "https://en.wikipedia.org/wiki/2023%E2%80%9324_Premier_League"
 // let initialPage = "https://people.scs.carleton.ca/~davidmckenney/tinyfruits/N-0.html"
 let crawledPages = new Set();  //used to keep track of what pages have been crawled. O(1) access
 let crawledPageList = [];  //used to determine whether a page has been crawled more than once
+const MAX_CRAWLED_PAGES = 1000;
 
 db.on("connected", function(){
     console.log("Database is connected successfully")
@@ -47,67 +48,125 @@ db.once('open', async function() {
 });
 
 const crawler = new Crawler({
-    maxConnections : 10, //connections in parallel
-    // rateLimit: 10000,
+    // maxConnections : 1, //connections in parallel
+    rateLimit: 10000,
     callback : handleCurrentPage
 });
 
+let insertedPages = 0;
+let iteration  = 0;
+let pTextList = []
 async function handleCurrentPage(error, res, done) {
     if(error){
         console.log(error);
     }else{
         try{
+            iteration++;
             //extract the data from the current page
             let $ = res.$;
             let currentURL = res.request.uri.href;    //current page's URL
             let title = $("title").text();
             let pText = $("p").text();
+            pTextList.push(pText);
             let links = $("a");   //an array of <a> DOM elements in the current page
             let outgoingLinks = [];   //an array that will contain the object IDs of each outgoing link of this page in the database
             let outgoingURLs = []   //an array that will contain the URLs of each outgoing link of this page in the database
             crawledPages.add(currentURL);
             crawledPageList.push(currentURL);
-            // console.log("Crawling", currentURL);
 
-            //check if the current page is already in the database, insert it if not
+
+            // the current page might have been added as an outgoing link previously
+            //find and update the current page with the crawled data
             let currPage = await Page.findOneAndUpdate({url:currentURL}, {
                 url: currentURL,
                 content:{
                     title: title,
                     pText: pText
                 },
-            }, {upsert:true, new:true});
+                type:"personal"
+            }, {new:true});
+
+                        
+            // if the current page doesn't exist, create it
+            if(!currPage){
+                if(insertedPages < MAX_CRAWLED_PAGES){
+                    let newPage = new Page({url:currentURL, content:{title, pText}, type:"personal"});
+                    try{
+                        currPage = await newPage.save();
+                        insertedPages++;
+                    }
+    
+                    catch(err){
+                        console.error("Error saving the current page", err)
+                    }
+                }
+
+            }
+
+
+
 
             if(currPage){
                 //insert all outgoing links of this page into the database if they are not already in
                 //because the page model must have their ._id attribute
-                for(let i = 0; i < links.length; ++i){
+                
+                for(let i = 0; i < Math.min(links.length, MAX_CRAWLED_PAGES-crawledPageList.length); ++i){
                     let url = res.$(links[i]).attr("href");   //current outgoing link's url
-                    url = new URL(url, currentURL); 
-                    let link = await Page.findOneAndUpdate( {url}, {
-                        url: url,
-                    }, {upsert:true, new:true});
+                    url = new URL(url, currentURL);
 
+                    let link = await Page.findOne({url});
                     if(!link){
-                        console.log("Could not add or find this page");
+                        if(insertedPages < MAX_CRAWLED_PAGES){
+                            let newPage = new Page({url, type:"personal"});
+                            try{
+                                link = await newPage.save();
+                                insertedPages++;
+                            }
+            
+                            catch(err){
+                                console.error("Error saving document", err)
+                            } 
+                        }
                     }
 
-                    else{
+                    if(link){
                         //add this link as an outgoing link of the current page being crawled
                         outgoingLinks.push(link._id);
                         outgoingURLs.push(link.url);
                         //add the current page being crawled as an incoming link of this link
-                        link.incomingLinks.push(currPage._id);
-                        await link.save();            
-                    }
-                }
+                        let newIncomingLinks = link.incomingLinks
+                        newIncomingLinks.push(currPage._id);
 
+                        try{
+                             link  = await Page.findOneAndUpdate(
+                                {url},
+                                { $set: { incomingLinks: newIncomingLinks } },
+                                { new: true } // This option ensures that the updated document is returned
+                              );
+                        }
+
+                        catch(err){
+                            console.log(err)
+                        }
+
+                        }
+                        currPage.outgoingLinks = outgoingLinks;
+        
+                        try{
+                            currPage = await currPage.save();
+       
+                        }
+                        catch(err){
+                            console.error("Could not save the current page", err)
+                        }
+
+                    }
+                   
             }   
 
-            currPage = await Page.findOneAndUpdate({url:currentURL}, {outgoingLinks},{upsert:true, new:true});
             
             //BFS - add all the outgoing links of the current page to the queue
-            for(let i = 0; i < outgoingURLs.length; ++i){
+            for(let i = 0; i < Math.min(outgoingURLs.length, MAX_CRAWLED_PAGES-crawledPageList.length); ++i){             
                 let outgoingURL = outgoingURLs[i];
                 if(outgoingURL && !crawledPages.has(outgoingURL)){
                     crawler.queue(outgoingURL);
@@ -124,40 +183,19 @@ async function handleCurrentPage(error, res, done) {
     done();
 }
 
+
 //Perhaps a useful event
 //Triggered when the queue becomes empty
 //There are some other events, check crawler docs
 crawler.on('drain', async function(){
     let results = await Page.find();
-    console.log("There are " + results.length + " fruits pages in the database");
+    console.log("There are " + results.length + " personal pages in the database");
     console.log("Only " + crawledPageList.length + " were crawled")
 });
 
 async function main(){
     try{
-        for(let i = 0; i < products.length; ++i){
-            delete products[i].id;
-            let prod = new Product(products[i]);
-            const productsArr = [
-                {
-                productID: prod._id,
-                quantity: 2
-                },
-            ]
-    
-            const order1 = new Order({
-                name: "Stephen",
-                products: productsArr
-            });
-            await order1.save();
-            ordersInserted++;
-            await prod.save();
-            productsInserted++;
-        }
         crawler.queue(initialPage);
-
-        
-
     }
 
     catch(err){
@@ -165,8 +203,6 @@ async function main(){
     }
 
     finally{
-        console.log("Inserted", productsInserted, "products");
-        console.log("Inserted", ordersInserted, "orders");
         return;
     }
 }
