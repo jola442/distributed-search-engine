@@ -1,6 +1,6 @@
 const elasticlunr = require("elasticlunr");
 const express = require('express');
-const Page = require('./pageRank');
+const Page = require('./pageModel');
 let router = express.Router();
 
 router.get("/", respondWithPages);
@@ -9,12 +9,6 @@ router.get("/:id", respondWithPage);
 
 async function respondWithPages(req, res){
   let queryText = req.query.text;
-  let number = Number(req.query.limit);
-  if (isNaN(number) || number < 1 || number > 50){
-    console.log("Number must be greater than 1 or less than 50")
-    let numb = 10;
-  }
-  number = numb; 
 
   const results = await Page.find({ $text: { $search: queryText } }).exec();
 
@@ -33,10 +27,7 @@ async function respondWithPages(req, res){
      
     });
 
-    let response = index.search(queryText, {}).sort( (a, b) => b.score - a.score).slice(0,number);
-    // if(boostSearch){
-    //   response.
-    // }
+    let response = index.search(queryText, {}).sort( (a, b) => b.score - a.score).slice(0,10);
     const promises = response.map(async (entry) => {
       let contentObj = await Page.findOne({ url: entry.ref }).select("content.title -_id").exec();
       entry.title = contentObj.content.title;
