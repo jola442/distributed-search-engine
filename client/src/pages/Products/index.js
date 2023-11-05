@@ -29,7 +29,7 @@ function Products() {
       <MobileNavbar></MobileNavbar>
       <div className='products-container'>
         {products.length > 0?products.map ( (product) => (
-          <Link to={"/products/"+ product._id} key={uuidv4()}>{product.name} target="_blank" rel="noreferrer noopener"</Link>
+          <Link to={"/products/"+ product._id} key={uuidv4()} target="_blank" rel="noreferrer noopener">{product.name}</Link>
         )):<p><b>No results</b></p>}
 
       </div>
