@@ -84,7 +84,7 @@ async function respondWithFruits(req, res){
           const doc = {
             url: result.url,
             "content.pText": result.content.pText,
-            pageRank : result.pageRank,
+            pr : result.pageRank,
           };
           index.addDoc(doc);
        
@@ -96,15 +96,15 @@ async function respondWithFruits(req, res){
         ...entry,
         // Attach the id and pageRank from the original results
         _id: results.find(r => r.url === entry.ref)._id,
-        pageRankVal: results.find(r => r.url === entry.ref).pageRank
-      })).sort((a, b) => (b.score * b.pageRankVal) - (a.score * a.pageRankVal));
+        pr: results.find(r => r.url === entry.ref).pageRank
+      })).sort((a, b) => (b.score * b.pageRank) - (a.score * a.pageRank));
     }
       else{
         response = response.map(entry => ({
           ...entry,
           // Attach the id and pageRank from the original results
           _id: results.find(r => r.url === entry.ref)._id,
-          pageRankVal: results.find(r => r.url === entry.ref).pageRank
+          pr: results.find(r => r.url === entry.ref).pageRank
         })).sort((a, b) => (b.score - a.score));
       }
       if(response.length < limit){
@@ -119,7 +119,7 @@ async function respondWithFruits(req, res){
           response.push({
             url: result.url,
             "content.pText": result.content.pText,
-            pageRankVal : result.pageRank,
+            pr : result.pageRank,
           })
       })
     }

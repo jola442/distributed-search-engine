@@ -1,7 +1,7 @@
 const Page = require("./pageModel");
 const mongoose = require("mongoose");
 const {Matrix} = require("ml-matrix");
-const config = require("./config.json")
+const config = require("./config.js")
 
 mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;

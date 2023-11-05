@@ -5,7 +5,7 @@ const orderRouter = require("./orderRouter")
 const pageRouter = require("./pageRouter")
 const fruitRouter = require("./fruitRouter")
 const personalRouter = require("./personalRouter.js")
-const config = require("./config.json")
+const config = require("./config.js")
 
 const mongoose = require("mongoose");
 
