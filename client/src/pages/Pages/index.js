@@ -32,7 +32,8 @@ function Pages({ type }) {
           <div key={uuidv4()} >
             <label><b>Title: </b></label>
             <Link to={"/"+type+"/"+page._id} target="_blank" rel="noreferrer noopener">{page.title} </Link><br></br>
-            <Link to={page.url} target="_blank" rel="noreferrer noopener"><b>URL: </b>{page.url}</Link>
+            <label htmlFor='url'><b>URL:</b></label>
+            <Link to={page.url} target="_blank" rel="noreferrer noopener">{page.url}</Link>
             <p><b>Score: </b>{page.score}</p>
             <p><b>Page Rank: </b>{page.pr}</p>
           </div>

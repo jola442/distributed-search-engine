@@ -65,12 +65,23 @@ async function respondWithFruits(req, res){
     console.log(queryText)
     let boost = req.query.boost === "true";
     let limit = Number(req.query.limit);
+    let results;
+ 
     if (isNaN(limit) || limit < 1 || limit > 50){
         console.log("limit must be greater than 1 or less than 50")
         limit = 10
-      }
+    }
+    if(queryText){
+      results = await Page.find({ $text: { $search: queryText } }).exec();
+    }
+    else{
+      results = await Page.find({
+        'content.pText': { $exists: true, $ne: "" }
+      }).limit(limit);
+
+    }
   
-    const results = await Page.find({ $text: { $search: queryText } }).exec();
+    
     //let boostSearch = boost = true;
   
     //console.log('results:', results.length);  
@@ -107,11 +118,12 @@ async function respondWithFruits(req, res){
           pageRankVal: results.find(r => r.url === entry.ref).pageRank
         })).sort((a, b) => (b.score - a.score));
       }
-      if(response.length < limit){
+    
+      if(!queryText || response.length < limit){
         let addDoc = limit - response.length;
         let existingUrls = response.map(entry => entry.ref);
         let randomDocs = await Page.aggregate([
-          { $match: { url: { $nin: existingUrls } } },
+          { $match: { url: { $nin: existingUrls }, type: "fruits" } },
           { $sample: { size: addDoc } }
         ]);
         //let addDocs = await Page.find().limit(addDoc);
@@ -120,24 +132,28 @@ async function respondWithFruits(req, res){
             url: result.url,
             "content.pText": result.content.pText,
             pageRankVal : result.pageRank,
+            _id: result._id
           })
       })
     }
 
       response = response.slice(0,limit);
+      // console.log("response",response)
 
       //let response = index.search(queryText, {}).sort( (a, b) => b.score - a.score).slice(0,10);
       
       const promises = response.map(async (entry) => {
-        let contentObj = await Page.findOne({ url: entry.ref }).select("content.title").exec();
+        // console.log("url",entry.ref);
+        let contentObj = await Page.findOne({ url: entry.url }).select("content.title").exec();
         entry.title = contentObj.content.title;
-        entry.url = entry.ref;
+        entry.url = entry.url;
+        entry.score = 0;
         delete entry.ref;
         return entry;
       });
   
       const resolvedResponse = await Promise.all(promises);
-      console.log("Response",response)
+      // console.log("Response",response.map( (r) => (r.url)));
       res.status(200).json(response);
   } catch (error) {
     console.error(error);
