@@ -100,7 +100,7 @@ function SearchBar() {
         </div>
         
 
-        <label for='boost'><b>Boost</b></label>
+        <label htmlFor='boost'><b>Boost</b></label>
         <input id="boost-checkbox" value="boost" type='checkbox' onChange={(e) => (setChecked(e.target.checked))}></input>      
         <label for='limit'><b>Limit</b></label>
         <input id="limit" type="number" value={limit} max={50} min = {1} step={1} onChange={(e) => (setLimit(e.target.value))}></input>

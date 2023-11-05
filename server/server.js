@@ -1,16 +1,15 @@
 const express = require('express');
-const path = require('path');
 const app = express();
 const productRouter = require("./productRouter");
 const orderRouter = require("./orderRouter")
 const pageRouter = require("./pageRouter")
 const fruitRouter = require("./fruitRouter")
 const personalRouter = require("./personalRouter.js")
+const config = require("./config.json")
 
 const mongoose = require("mongoose");
-const uri = "mongodb://127.0.0.1/eCommerceDB" 
 
-mongoose.connect(uri, {useNewUrlParser:true});
+mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 
 db.on("connected", function(){
@@ -25,7 +24,7 @@ db.on("error", console.error.bind(console, "connectection error:"));
 
 
 
-app.listen(process.env.PORT || 5000);
+app.listen(process.env.PORT || 3001);
 app.use(express.json());
 
 
@@ -44,4 +43,4 @@ app.use("/personal", personalRouter)
 // support the client requesting either JSON or HTML representations.
 //test
 
-console.log("Server listening at http://localhost:5000");
+console.log("Server listening at http://localhost:3001");

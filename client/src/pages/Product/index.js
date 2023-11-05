@@ -65,7 +65,7 @@ function Product() {
           }):<span>No reviews yet</span>}
         </p>
 
-        <Link to={location.pathname+"/reviews"}>View Reviews</Link><br></br>
+        <Link to={location.pathname+"/reviews"} target="_blank" rel="noreferrer noopener">View Reviews</Link><br></br>
         <button name="add-review" className='add-review' onClick={addReview}>Add Review</button>
         <input type="text" id="review" name="review" placeholder='1-10' onChange={ (e) => {setReview(e.target.value)}}></input>
 
