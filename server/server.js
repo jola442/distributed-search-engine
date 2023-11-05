@@ -5,15 +5,32 @@ const orderRouter = require("./orderRouter")
 const pageRouter = require("./pageRouter")
 const fruitRouter = require("./fruitRouter")
 const personalRouter = require("./personalRouter.js")
-const config = require("./config.json")
+const config = require("./config.js")
+const axios = require('axios');
 
 const mongoose = require("mongoose");
+const SERVER_URL = "http://localhost:3001";
+
+const requestData = {
+    request_url: SERVER_URL,
+  };
 
 mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 
 db.on("connected", function(){
-    console.log("Database is connected successfully")
+//     console.log("Database is connected successfully")
+//     axios.put('http://134.117.130.17:3000/searchengines', requestData, {
+//     headers: {
+//         'Content-Type': 'application/json',
+//     },
+//     })
+//     .then((response) => {
+//         console.log('Response Status:', response.status);
+//     })
+//     .catch((error) => {
+//         console.error('Error:', error.response.status, error.response.data);
+// });
 })
 
 db.on("disconnected", function(){

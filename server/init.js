@@ -5,7 +5,7 @@ const Page = require("./pageModel");
 const path = require('path');
 const mongoose = require("mongoose");
 const Crawler = require("crawler");
-const config = require("./config.json")
+const config = require("./config.js")
 
 mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
