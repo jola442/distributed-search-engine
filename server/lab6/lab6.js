@@ -4,18 +4,6 @@ let fs = require('fs').promises;
 let path = require('path');
 
 //Input: The name of the file in server/lab6
-//Output: An array of user names in the specified file
-function extractUserNames(filename){
-
-}
-
-//Input: The name of the file in server/lab6
-//Output: An array of user names in the specified file
-function extractItemNames(filename){
-
-}
-
-//Input: The name of the file in server/lab6
 //Output: A n x m matrix where n is the number of users and m is the number of items
 async function extractUserInfo(filename){
     try {
@@ -39,13 +27,9 @@ async function extractUserInfo(filename){
 }
 
 
-
-//Input: The name of the file in server/lab6
-//Output: A n x m matrix where n is the number of users and m is the number of items
-function extractUserRatings(filename){
-
-}
-
+//Input: user - userIndex
+//       ratingsMatrix
+//Output: Average rating of the user
 function calculateMean(user, ratingsMatrix){
     let sum = 0
     let userRatings = ratingsMatrix[user]
@@ -55,7 +39,7 @@ function calculateMean(user, ratingsMatrix){
         }
     }
 
-    return sum/NUM_ITEMS
+    return sum/userRatings.length;
 }
 
 //Input: userA and userB are the integers representing the user names e.g userA = 1 is for user1
@@ -86,7 +70,10 @@ function predictRating(user, itemNum, ratingsMatrix, correlations){
 function main(){
     for(let i = 0; i < TEST_FILE_NAMES.length; ++i){
         let filename = TEST_FILE_NAMES[i]
-        let ratingsMatrix = extractUserInfo(filename)
+        let parsedData = extractUserInfo(filename)
+        let ratingsMatrix = parsedData.ratings;
+        let numUsers = parsedData.userCount;
+        let numItems = parsedData.itemCount;
         let missingIndicies = getMissingRating(ratingsMatrix)
 
         //Predict the rating for every user with a missing rating
