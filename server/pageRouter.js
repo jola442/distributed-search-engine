@@ -58,7 +58,7 @@ async function respondWithPage(req, res){
         }
 
         console.log(page);
-        //JSON with the neccessary information
+        //JSON with the neccessary information///comment
         const response = {
             url: page.url,
             incomingLinks: page.incomingLinks,
