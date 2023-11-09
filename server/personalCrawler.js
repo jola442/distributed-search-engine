@@ -62,8 +62,7 @@ async function handleCurrentPage(error, res, done) {
             //extract the data from the current page
             let $ = res.$;
             let currentURL = res.request.uri.href;    //current page's URL
-            let title = $("title").text();;
-            // console.log($("p").text().slice(0, 100).length);
+            let title = $("title").text();
             let pText = $("p").text().slice(0, MAX_TEXT_LENGTH);
             let links = $("a");   //an array of <a> DOM elements in the current page
             let outgoingLinks = [];   //an array that will contain the object IDs of each outgoing link of this page in the database
