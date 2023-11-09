@@ -155,6 +155,7 @@ async function respondWithFruitPages(req, res){
           pr : result.pageRank,
           title:result.title
         };
+        //add all documents to the index
         index.addDoc(doc);
      
     });

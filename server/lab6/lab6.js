@@ -1,10 +1,29 @@
 
 const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
+let fs = require('fs').promises;
+let path = require('path');
 
 //Input: The name of the file in server/lab6
 //Output: A n x m matrix where n is the number of users and m is the number of items
-function extractUserInfo(filename){
-
+async function extractUserInfo(filename){
+    try {
+        let fileContent = await fs.readFile(filePath, 'utf8');
+        let lines = fileContent.trim().split('\n');
+        let [userCount, itemCount] = lines[0].split(' ').map(Number);
+        let ratings = [];
+        for (let i = 3; i < lines.length; i++) {
+          let userRatings = lines[i].split(' ').map(Number);
+          ratings.push(userRatings);
+        }
+        let parsedData = {
+            userCount,
+            itemCount,
+            ratings
+        }
+        return parsedData;
+      } catch (err) {
+        console.error('Error reading the file:', err);
+      }
 }
 
 //Input: userA and userB are the integers representing the user names e.g userA = 1 is for user1
