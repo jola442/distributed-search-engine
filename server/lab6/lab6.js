@@ -34,13 +34,16 @@ async function extractUserInfo(filename){
 function calculateMean(user, ratingsMatrix){
     let sum = 0
     let userRatings = ratingsMatrix[user]
+    let count = 0;
     for(let i = 0; i < userRatings.length; ++i){
         if(userRatings[i] !== -1){
             sum += userRatings[i]
+            count++;
         }
+        
     }
 
-    return sum/userRatings.length;
+    return sum/count;
 }
 
 //Input: correlations is an object with user indicies as keys and their correlations with a specified user as values
@@ -54,23 +57,23 @@ function getMaxCorrelations(correlations){
 //Input: userA and userB are the integers representing the indicies of the users in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: float representing Pearson Correlation Coefficient
-function pearsonCorrelation(userA, userB){
+function pearsonCorrelation(userA, userB,ratingsMatrix){
     let num = 0; // numerator
     let denomA = 0;
     let denomB = 0;
-    let meanA = 0;
-    let meanB = 0;
+    let meanA = calculateMean(userA, ratingsMatrix);
+    let meanB = calculateMean(userB, ratingsMatrix);
+
+    
 
 
 
-    //  mean values for the two uses: userA and userB
 
-    for(let i = 0; i < userA.length; i++){
-        meanA += userA[i];
-        meanB +=userB[i];
-    }
-    meanA /= userA.length;
-    meanB /= userB.length;
+
+
+    
+
+    
 
 
 
