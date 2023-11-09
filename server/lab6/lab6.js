@@ -1,5 +1,6 @@
 
 const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
+const NEIGHBOURHOOD_SIZE = 2;
 let fs = require('fs').promises;
 let path = require('path');
 
@@ -42,6 +43,12 @@ function calculateMean(user, ratingsMatrix){
     return sum/userRatings.length;
 }
 
+function getMaxCorrelations(correlations){
+    correlationsList = Object.entries(correlations);
+    correlationsList.sort( (a, b) => (b[1]-a[1]) );
+    return correlationsList.slice(0, NEIGHBOURHOOD_SIZE);
+}
+
 //Input: userA and userB are the integers representing the user names e.g userA = 1 is for user1
 //Output: float representing Pearson Correlation Coefficient
 function pearsonCorrelation(userA, userB, ratingsMatrix){
@@ -49,8 +56,15 @@ function pearsonCorrelation(userA, userB, ratingsMatrix){
 }
 
 function getPearsonCorrelations(userA, ratingsMatrix){
-    // let correlations = []
-    // for(let i = 0; i < )
+
+    let correlations = {}
+    for(let userB = 0; userB < ratingsMatrix.length; ++userB){
+        if(i !== userA){
+            correlations[userB] = correlations.pearsonCorrelation(userA, userB, ratingsMatrix)
+        }
+    }
+
+    return correlations;
 }
 
 //Input: A n x m matrix where n is the number of users and m is the number of items
@@ -63,7 +77,22 @@ function getMissingRatings(ratingsMatrix){
 //       itemNum is an integer representing the number of the item
 //Output: integer representing user's predicted rating for item itemNum
 function predictRating(user, itemNum, ratingsMatrix, correlations){
-    let r_a_mean = 0
+    let r_a_mean = calculateMean(user, ratingsMatrix)
+    let correlationsList = getMaxCorrelations(correlations)
+    let numerator = 0;
+    let denominator = 0;
+    for(let i = 0; i < correlationsList; ++i){
+        let b_idx = correlationsList[0]
+        let b_corr = correlationsList[1]
+        let r_b_p = ratingsMatrix[b_idx][itemNum]
+        let r_b_mean = calculateMean()
+        numerator += (b_corr * (r_b_p - r_b_mean));
+        denominator += b_corr
+    }
+
+    let predictedRating = r_a_mean + numerator/denominator;
+    return predictedRating;
+
 }
 
 //for every missing index, perform 
