@@ -5,20 +5,16 @@ const Page = require("./pageModel");
 const path = require('path');
 const mongoose = require("mongoose");
 const Crawler = require("crawler");
-const {Matrix} = require("ml-matrix");
+const config = require("./config.js")
 
-const uri = "mongodb://127.0.0.1/eCommerceDB"
-let productsInserted = 0;
-let ordersInserted = 0;
-
- 
-
-mongoose.connect(uri, {useNewUrlParser:true});
+mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 let initialPage = 'https://people.scs.carleton.ca/~davidmckenney/fruitgraph/N-0.html';
-// let initialPage = "https://people.scs.carleton.ca/~davidmckenney/tinyfruits/N-0.html"
+let productsInserted = 0;
+let ordersInserted = 0;
 let crawledPages = new Set();  //used to keep track of what pages have been crawled. O(1) access
 let crawledPageList = [];  //used to determine whether a page has been crawled more than once
+
 
 db.on("connected", function(){
     console.log("Database is connected successfully")

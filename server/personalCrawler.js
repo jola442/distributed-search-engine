@@ -5,17 +5,17 @@ const Page = require("./pageModel");
 const path = require('path');
 const mongoose = require("mongoose");
 const Crawler = require("crawler");
-const {Matrix} = require("ml-matrix");
+const config = require("./config")
 
-const uri = "mongodb://127.0.0.1/eCommerceDB"
-
-mongoose.connect(uri, {useNewUrlParser:true});
+mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
+db = mongoose.connection;
 db = mongoose.connection;
 let initialPage = "https://en.wikipedia.org/wiki/Eden_Hazard"
 // let initialPage = "https://people.scs.carleton.ca/~davidmckenney/tinyfruits/N-0.html"
 let crawledPages = new Set();  //used to keep track of what pages have been crawled. O(1) access
 let crawledPageList = [];  //used to determine whether a page has been crawled more than once
-const MAX_CRAWLED_PAGES = 1000;
+const MAX_CRAWLED_PAGES = 505;
+const MAX_TEXT_LENGTH = 100;
 
 db.on("connected", function(){
     console.log("Database is connected successfully")
@@ -51,19 +51,19 @@ const crawler = new Crawler({
 
 let insertedPages = 0;
 let iteration  = 0;
-let pTextList = []
+
 async function handleCurrentPage(error, res, done) {
     if(error){
         console.log(error);
     }else{
         try{
             iteration++;
+            console.log("Crawling page", iteration);
             //extract the data from the current page
             let $ = res.$;
             let currentURL = res.request.uri.href;    //current page's URL
             let title = $("title").text();
-            let pText = $("p").text();
-            // console.log(iteration, pText);
+            let pText = $("p").text().slice(0, MAX_TEXT_LENGTH);
             let links = $("a");   //an array of <a> DOM elements in the current page
             let outgoingLinks = [];   //an array that will contain the object IDs of each outgoing link of this page in the database
             let outgoingURLs = []   //an array that will contain the URLs of each outgoing link of this page in the database

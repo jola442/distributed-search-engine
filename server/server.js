@@ -1,20 +1,31 @@
 const express = require('express');
-const path = require('path');
 const app = express();
 const productRouter = require("./productRouter");
 const orderRouter = require("./orderRouter")
 const pageRouter = require("./pageRouter")
 const fruitRouter = require("./fruitRouter")
 const personalRouter = require("./personalRouter.js")
+const config = require("./config.js")
+const axios = require('axios');
 
 const mongoose = require("mongoose");
-const uri = "mongodb://127.0.0.1/eCommerceDB" 
+const SERVER_URL = "http://134.117.132.58:3001";
 
-mongoose.connect(uri, {useNewUrlParser:true});
+const requestData = {
+    request_url: SERVER_URL,
+  };
+
+mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 
 db.on("connected", function(){
     console.log("Database is connected successfully")
+//     axios.get('http://134.117.130.17:3000/searchengines').then((response) => {
+//         console.log('Response Data:', response.data);
+//     })
+//     .catch((error) => {
+//         console.log(error)
+// });
 })
 
 db.on("disconnected", function(){
@@ -25,7 +36,7 @@ db.on("error", console.error.bind(console, "connectection error:"));
 
 
 
-app.listen(process.env.PORT || 5000);
+app.listen(process.env.PORT || 3001);
 app.use(express.json());
 
 
@@ -40,9 +51,8 @@ app.use("/personal", personalRouter)
 
 
 
-
 // 5. A way to retrieve and view only the reviews for a specific product. The server should
 // support the client requesting either JSON or HTML representations.
 //test
 
-console.log("Server listening at http://localhost:5000");
+console.log("Server listening at http://localhost:3001");

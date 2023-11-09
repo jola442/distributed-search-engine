@@ -1,11 +1,9 @@
 const Page = require("./pageModel");
 const mongoose = require("mongoose");
 const {Matrix} = require("ml-matrix");
+const config = require("./config.js")
 
-const uri = "mongodb://127.0.0.1/eCommerceDB"
-
-
-mongoose.connect(uri, {useNewUrlParser:true});
+mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 
 
@@ -70,21 +68,21 @@ async function updatePageRank(type){
             })
             row = row.map( (entry) => {
                 if(entry === 1){
-                    // console.log("Entry:",entry)
-                    // console.log("One Count:",one_count)
                     entry = 1/one_count;
                 }
                 return entry;
             })
-            // console.log("row after normalization:", row)
         }
         twoDList.push(row)
     }
 
-    //numPages x numPages matrix
+    //normalized numPages x numPages adjacency matrix
     const A = new Matrix(twoDList);
-    let alpha = 0.1
-    // numPages x numPages matrix
+
+    //teleport to a random node with probability alpha
+    let alpha = 0.1      
+
+    // numPages x numPages matrix of 1s
     let ones_matrix = new Matrix(numPages, numPages).fill(1);
 
     //numPages x numPages matrix
@@ -100,7 +98,6 @@ async function updatePageRank(type){
     // Set the random value to 1
     pi_init.set(0, randomColIndex, 1);
 
-    // console.log("pi_init", pi_init)
     let euclideanDistance = 1;
     let previous = pi_init;
     let current;
@@ -134,12 +131,10 @@ async function updatePageRank(type){
         catch(err){
             console.log(err);
         }
-        // page = pages[i]
-        // pageResults[i] = {url: pages[i].url, pageRankVal: current.get(0,i)}
     }
 
-    pageResults = pageResults.sort( (a, b) => (b.pageRankVal-a.pageRankVal)).slice(0,25)
+    // pageResults = pageResults.sort( (a, b) => (b.pageRankVal-a.pageRankVal)).slice(0,25)
 
-    console.log(pageResults)
+    // console.log(pageResults)
 }
 

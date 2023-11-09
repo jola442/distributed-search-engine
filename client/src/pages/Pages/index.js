@@ -6,9 +6,9 @@ import "./index.css"
 import MobileNavbar from '../../components/MobileNavbar';
 
 
-function Pages() {
+function Pages({ type }) {
   const [pages, setPages] = useState(null);
-
+  console.log("Type:",type)
   const location = useLocation();
   useEffect(() => {
     axios.get(location.pathname + location.search).then( res => {
@@ -30,8 +30,10 @@ function Pages() {
       <div className='pages-container'>
         {pages.length > 0?pages.map ( (page) => (
           <div key={uuidv4()} >
-            <Link to={"/"+page._id}>{page.title}</Link>
-            <Link to={page.url} target="_blank" rel="noreferrer noopener"><b>URL: </b>{page.url}</Link>
+            <label><b>Title: </b></label>
+            <Link to={"/"+type+"/"+page._id} target="_blank" rel="noreferrer noopener">{page.title} </Link><br></br>
+            <label htmlFor='url'><b>URL:</b></label>
+            <Link to={page.url} target="_blank" rel="noreferrer noopener">{page.url}</Link>
             <p><b>Score: </b>{page.score}</p>
             <p><b>Page Rank: </b>{page.pr}</p>
           </div>
