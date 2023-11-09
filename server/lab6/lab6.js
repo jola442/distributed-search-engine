@@ -29,6 +29,49 @@ async function extractUserInfo(filename){
 //Input: userA and userB are the integers representing the user names e.g userA = 1 is for user1
 //Output: float representing Pearson Correlation Coefficient
 function pearsonCorrelation(userA, userB){
+    let num = 0; // numerator
+    let denomA = 0;
+    let denomB = 0;
+    let meanA = 0;
+    let meanB = 0;
+
+
+
+    // the mean values for the two uses: userA and userB
+
+    for(let i = 0; i < userA.length; i++){
+        meanA += userA[i];
+        meanB +=userB[i];
+    }
+    meanA /= userA.length;
+    meanB /= userB.length;
+
+
+    // the numerator and denominator 
+
+
+    for(let i = 0; i < userA.length; i++){
+
+        const deviationA = userA[i] - meanA;
+        const deviationB = userB[i] - meanB;
+
+        //updating all 
+        num += deviationA * deviationB;
+        denomA += deviationA ** 2;
+        denomB += deviationB ** 2;
+
+    }
+
+    const denominator = Math.sqrt(denomA) * Math.sqrt(denomB);
+
+    if (demoninator === 0){
+        return 0 
+    }
+
+    return num / denominator;
+
+
+
 
 }
 
