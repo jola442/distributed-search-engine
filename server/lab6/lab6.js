@@ -7,7 +7,7 @@ let path = require('path');
 //Output: A n x m matrix where n is the number of users and m is the number of items
 async function extractUserInfo(filename){
     try {
-        let fileContent = await fs.readFile(filePath, 'utf8');
+        let fileContent = await fs.readFile(filename, 'utf8');
         let lines = fileContent.trim().split('\n');
         let [userCount, itemCount] = lines[0].split(' ').map(Number);
         let ratings = [];
@@ -100,8 +100,22 @@ function getPearsonCorrelations(userA, ratingsMatrix){
 
 //Input: A n x m matrix where n is the number of users and m is the number of items
 //Output: An array of two elements representing the user index and the item index of the missing matrix entry
-function getMissingRatings(ratingsMatrix){
-
+function getMissingRatings(matrix){
+    try{
+        let rows = matrix.length;
+        let columns = matrix[0].length;
+        let ratingsCount = [];
+        for(let i=0; i< rows; i++){
+            for(let j = 0; j < columns; j++){
+                if(matrix[i][j] == -1){
+                    ratingsCount.push([i,j]);
+                }
+            }
+        }
+        console.log(ratingsCount);
+    }catch (error) {
+        console.error('Error in getMissingRatings function:', error);
+    }
 }
 
 //Input: user is an integer representing the user name e.g user = 1 for user1
