@@ -53,7 +53,7 @@ function pearsonCorrelation(userA, userB){
 
 
 
-    // the mean values for the two uses: userA and userB
+    //  mean values for the two uses: userA and userB
 
     for(let i = 0; i < userA.length; i++){
         meanA += userA[i];
