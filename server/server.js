@@ -9,7 +9,7 @@ const config = require("./config.js")
 const axios = require('axios');
 
 const mongoose = require("mongoose");
-const SERVER_URL = "http://localhost:3001";
+const SERVER_URL = "http://134.117.132.58:3001";
 
 const requestData = {
     request_url: SERVER_URL,
@@ -19,17 +19,12 @@ mongoose.connect(config.MONGO_DB_URI, {useNewUrlParser:true});
 db = mongoose.connection;
 
 db.on("connected", function(){
-//     console.log("Database is connected successfully")
-//     axios.put('http://134.117.130.17:3000/searchengines', requestData, {
-//     headers: {
-//         'Content-Type': 'application/json',
-//     },
-//     })
-//     .then((response) => {
-//         console.log('Response Status:', response.status);
+    console.log("Database is connected successfully")
+//     axios.get('http://134.117.130.17:3000/searchengines').then((response) => {
+//         console.log('Response Data:', response.data);
 //     })
 //     .catch((error) => {
-//         console.error('Error:', error.response.status, error.response.data);
+//         console.log(error)
 // });
 })
 
