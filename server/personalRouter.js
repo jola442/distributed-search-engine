@@ -60,56 +60,81 @@ async function respondWithPersonalPage(req, res) {
   }
 
 //send back JSON with {_id, name, url, title, score, pr}
-// Send back JSON with {_id, name, url, title, score, pr, wordFrequency}
-async function respondWithPersonalPages(req, res) {
-    try {
-      const id = req.params.id;
-      const page = await Page.findOne({ _id: id, type: 'personal' });
-      if (page) {
-        const {
-          _id,
-          url,
-          content: { title, pText },
-          pr,
-        } = page;
-  
-        // Calculate word frequency
-        const words = pText.split(/\s+/);
-        const wordFrequency = {};
-  
-        for (const word of words) {
-          if (wordFrequency[word]) {
-            wordFrequency[word]++;
-          } else {
-            wordFrequency[word] = 1;
-          }
-        }
-  
-        // Replace the placeholders with actual data
-        const name = "Your Name"; // Replace with the actual name.
-        const score = 4.5; // Replace with the actual score.
-  
-        // Create the response object
-        const response = {
-          _id,
-          name,
-          url,
-          title,
-          score,
-          pr,
-          wordFrequency,
-        };
-  
-        res.json(response);
-      } else {
-        res.status(404).json({ message: 'Personal page not found' });
-      }
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
+async function respondWithPersonalPages(req, res){
+  let queryText = req.query.q;
+  console.log(queryText)
+  let boost = req.query.boost === "true";
+  let limit = Number(req.query.limit);
+  let results;
+
+  //set limit parameter
+  if (isNaN(limit) || limit < 1 || limit > 50){
+      console.log("limit must be greater than 1 or less than 50")
+      limit = 10
   }
-  
+  //search for the page with the given parameters
+  if(queryText){
+    results = await Page.find({ $text: { $search: queryText }, type:"personal" }).limit(limit).exec();
+  }
+
+  //if q='', return limit results that have non-empty paragraph text
+  else{
+    results = await Page.find({
+      'content.pText': { $exists: true, $ne: ""},
+      "type":"personal"
+    }).limit(limit);
+    let response = []
+    results.forEach((result) => {
+      const doc = {
+        _id:result._id,
+        url: result.url,
+        "content.pText": result.content.pText,
+        pr : result.pageRank,
+        title:result.content.title,
+        score:0
+      };
+      response.push(doc);
+    });
+    res.status(200).json(response);
+    return;
+  }
+
+  console.log("results after initial search", results.length)
+
+  //if there still aren't up to <limit> results, add <limit>-results.length results
+  if(results.length < limit){
+    let addDoc = limit - results.length;
+    let existingUrls = results.map(entry => entry.url);
+    let randomDocs = await Page.aggregate([
+      { $match: { url: { $nin: existingUrls }, type: "personal" } },
+      { $sample: { size: addDoc } }
+    ]).limit(limit-results.length);
+    //let addDocs = await Page.find().limit(addDoc);
+    randomDocs.forEach((result) => {
+      results.push(result);
+      // {
+      //   url: result.url,
+      //   "content.pText": result.content.pText,
+      //   pr : result.pageRank,
+      // })
+  })
+  let response = []
+  results.forEach((result) => {
+    const doc = {
+      _id:result._id,
+      url: result.url,
+      "content.pText": result.content.pText,
+      pr : result.pageRank,
+      title:result.content.title,
+      score:0
+    };
+    response.push(doc);
+  });
+  res.status(200).json(response);
+  return;
+  // console.log("Random docs length:",randomDocs.length);
+  // console.log("Results length", results.length);
+}
 
   
   //let boostSearch = boost = true;
@@ -184,6 +209,6 @@ async function respondWithPersonalPages(req, res) {
   res.status(500).json({ error: 'server error' });
   
 }
-
+}
 
 module.exports = router;

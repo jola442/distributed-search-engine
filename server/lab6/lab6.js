@@ -63,6 +63,8 @@ function pearsonCorrelation(userA, userB){
     meanB /= userB.length;
 
 
+
+     
     // the numerator and denominator 
 
 
