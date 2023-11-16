@@ -1,5 +1,5 @@
 
-const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
+const TEST_FILE_NAMES = ["testa.txt", "test1.txt", "test2.txt", "test3.txt"]
 // const TEST_FILE_NAMES = ["test2.txt"]
 const NEIGHBOURHOOD_SIZE = 2;
 let fs = require('fs').promises;
