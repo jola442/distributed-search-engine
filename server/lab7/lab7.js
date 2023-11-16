@@ -66,9 +66,24 @@ function getRatingsDiffMatrix(ratingsMatrix){
 //Input: itemA and itemB are the integers representing the indicies of the items in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: float representing the adjusted cosine similarity between the two items
-function getSimilarity(itemA, itemB, ratingsMatrix, ratingsDiffMatrix){
- 
+function getSimilarity(itemA, itemB, ratingsDiffMatrix){
+    let numerator = 0;
+    let denomA = 0;
+    let denomB = 0;
+    let itemA_ratings = ratingsDiffMatrix[itemA]
+    let itemB_ratings = ratingsDiffMatrix[itemB]
+
+    for(let i = 0; i < itemA_ratings.length; ++i){
+        if(itemA_ratings[i] !== "NA" && itemB_ratings[i] !== "NA"){
+            numerator += itemA_ratings[i] * itemB_ratings;
+            denomA += Math.pow(itemA_ratings[i], 2)
+            denomB += Math.pow(itemB_ratings[i], 2)
+        }
+    }
+
+    return numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
 }
+
 
 //Input: itemA is an integer representing the index of an item in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
