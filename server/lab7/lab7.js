@@ -85,10 +85,10 @@ function getSimilarities(itemA, ratingsMatrix, ratingsDiffMatrix){
     return similarities;
 }
 
-//Input: similiarities is an object with item indicies as keys and their similiarities with a specified item as values
+//Input: similarities is an object with item indicies as keys and their similarities with a specified item as values
 //Output: a sorted 2D array (by correlation values), the first element of each inner array is the user index, the second element is the correlation with a specified user,
-function getMaxSimilarities(similiarities){
-    similaritiesList = Object.entries(similiarities);
+function getMaxSimilarities(similarities){
+    similaritiesList = Object.entries(similarities);
     similaritiesList.sort( (a, b) => (b[1]-a[1]) );
     return similaritiesList.slice(0, NEIGHBOURHOOD_SIZE);
 }
@@ -120,8 +120,22 @@ function getMissingRatings(ratingsMatrix){
 //Input: user is an integer representing the user name e.g user = 1 for user1
 //       itemNum is an integer representing the number of the item
 //Output: integer representing user's predicted rating for item itemNum
-function predictRating(user, itemNum, ratingsMatrix, similiarities){
+function predictRating(user, ratingsMatrix, similarities){
+    let similaritiesList = getMaxSimilarities(similarities);
+    let numerator = 0;
+    let denominator = 0;
 
+    for(let j = 0; j < similaritiesList.length; ++j){
+        let i = similaritiesList[j][0]
+        let sim_ip = similaritiesList[j][1]
+        let r_ui = ratingsMatrix[user][i]
+
+        numerator += sim_ip * r_ui
+        denominator += sim_ip
+    }
+
+    let predictedRating = numerator/denominator;
+    return predictedRating;
 }
 
 //for every missing index, perform 
@@ -140,8 +154,8 @@ async function main(){
             let userIdx = missingIndicies[j][0]
             let itemIdx = missingIndicies[j][1]
             let ratingsDiffMatrix = getRatingsDiffMatrix(ratingsMatrix)
-            let similiarities = getSimilarities(itemIdx, ratingsMatrix, ratingsDiffMatrix)
-            let predictedRating = predictRating(userIdx, itemIdx, ratingsMatrix, similiarities)
+            let similarities = getSimilarities(itemIdx, ratingsMatrix, ratingsDiffMatrix)
+            let predictedRating = predictRating(userIdx, itemIdx, ratingsMatrix, similarities)
             console.log("predicted rating of ratingsMatrix[" + userIdx +"][" + itemIdx +"]: " + predictedRating)
             console.log("correct rating of ratingsMatrix[" + userIdx +"][" + itemIdx +"]: " + testRatingsMatrix[userIdx][itemIdx])
             missingValues.push(predictRating)
