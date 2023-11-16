@@ -60,7 +60,36 @@ function calculateMean(user, ratingsMatrix){
 //Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: A matrix where each entry is the user's rating of the product - the user's average rating
 function getRatingsDiffMatrix(ratingsMatrix){
+    const numRows = ratingsMatrix.length;
+    const numCols = ratingsMatrix[0].length;
 
+
+    //calculate the average ratings 
+   const userAverages = ratingsMatrix.map(row => {
+       const validRatings = row.filter(rating => rating !== -1);
+       const sum = validRatings.reduce((acc, rating) => acc + rating, 0);
+
+       let averageRating = 0;
+       if(validRatings.length > 0){
+           averageRating = sum / validRatings.length;
+       }
+       return averageRating;
+   });
+
+
+   //calcuate the rating difference matrix
+   const diffMatrix = [];
+   for(let i = 0; i < numRows; i++){
+       diffMatrix.push([]);
+       for(let j =0; j < numCols; j++){
+           if(ratingsMatrix[i][j] === -1){
+               diffMatrix[i].push('NA');
+           } else{
+               diffMatrix[i].push(ratingsMatrix[i][j] - userAverages[i]);
+           }
+       }
+   }
+   return diffMatrix
 }
 
 //Input: itemA and itemB are the integers representing the indicies of the items in ratingsMatrix
