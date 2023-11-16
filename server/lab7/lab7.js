@@ -70,19 +70,24 @@ function getSimilarity(itemA, itemB, ratingsDiffMatrix){
     let numerator = 0;
     let denomA = 0;
     let denomB = 0;
-    let itemA_ratings = ratingsDiffMatrix[itemA]
-    let itemB_ratings = ratingsDiffMatrix[itemB]
-
-    for(let i = 0; i < itemA_ratings.length; ++i){
-        if(itemA_ratings[i] !== "NA" && itemB_ratings[i] !== "NA"){
-            numerator += itemA_ratings[i] * itemB_ratings;
-            denomA += Math.pow(itemA_ratings[i], 2)
-            denomB += Math.pow(itemB_ratings[i], 2)
+    let itemA_Matrix = [];
+    let itemB_Matrix = []
+    for (let i = 0; i < ratingsDiffMatrix.length; ++i) {
+        itemA_Matrix.push([ratingsDiffMatrix[i][itemA]]);
+        itemB_Matrix.push([ratingsDiffMatrix[i][itemB]]);
+    }
+    
+    for(let i = 0; i < ratingsDiffMatrix.length; ++i){
+        if (itemA_Matrix[i][0] !== "NA" && itemB_Matrix[i][0] !== "NA") {
+            numerator += (itemA_Matrix[i]) * (itemB_Matrix[i]);
+            denomA += Math.pow(itemA_Matrix[i], 2)
+            denomB += Math.pow(itemB_Matrix[i], 2)
         }
     }
 
     return numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
 }
+
 
 
 //Input: itemA is an integer representing the index of an item in ratingsMatrix
