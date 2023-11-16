@@ -86,6 +86,7 @@ async function respondWithFruitPages(req, res){
     let response = []
     results.forEach((result) => {
       const doc = {
+        names: NAMES,
         _id:result._id,
         url: result.url,
         "content.pText": result.content.pText,
@@ -121,6 +122,7 @@ async function respondWithFruitPages(req, res){
   let response = []
   results.forEach((result) => {
     const doc = {
+      names: NAMES,
       _id:result._id,
       url: result.url,
       "content.pText": result.content.pText,
@@ -167,6 +169,7 @@ async function respondWithFruitPages(req, res){
     response = response.map( (entry) => {
       let result = results.find(r => r.url === entry.ref);
       // console.log("Result", result)
+      entry.names = NAMES,
       entry.url = entry.ref;
       entry.title = result.content.title;
       entry._id = result._id;
