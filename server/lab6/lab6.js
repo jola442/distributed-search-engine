@@ -1,5 +1,6 @@
 
 const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
+// const TEST_FILE_NAMES = ["test2.txt"]
 const NEIGHBOURHOOD_SIZE = 2;
 let fs = require('fs').promises;
 let path = require('path');
@@ -10,10 +11,10 @@ async function extractUserInfo(filename){
     try {
         let fileContent = await fs.readFile(filename, 'utf8');
         let lines = fileContent.trim().split('\n');
-        let [userCount, itemCount] = lines[0].split(' ').map(Number);
+        let [userCount, itemCount] = lines[0].trim().split(' ').map(Number);
         let ratings = [];
         for (let i = 3; i < lines.length; i++) {
-          let userRatings = lines[i].split(' ').map(Number);
+          let userRatings = lines[i].trim().split(' ').map(Number);
           ratings.push(userRatings);
         }
         let parsedData = {
@@ -34,6 +35,8 @@ async function extractUserInfo(filename){
 function calculateMean(user, ratingsMatrix){
     let sum = 0
     let userRatings = ratingsMatrix[user]
+    // console.log("User ratings",userRatings)
+    // console.log("Ratings matrix", ratingsMatrix)
     let count = 0;
     for(let i = 0; i < userRatings.length; ++i){
         if(userRatings[i] !== -1){
@@ -43,7 +46,15 @@ function calculateMean(user, ratingsMatrix){
         
     }
 
-    return sum/count;
+    // console.log("Count:", count)
+    // console.log("Sum:", sum)
+    if(count > 0){
+        return sum/count
+    }
+
+    else{
+        return 0;
+    }
 }
 
 //Input: correlations is an object with user indicies as keys and their correlations with a specified user as values
@@ -57,54 +68,24 @@ function getMaxCorrelations(correlations){
 //Input: userA and userB are the integers representing the indicies of the users in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: float representing Pearson Correlation Coefficient
-function pearsonCorrelation(userA, userB,ratingsMatrix){
-    let num = 0; // numerator
+function pearsonCorrelation(userA, userB, ratingsMatrix){
+    let numerator = 0;
     let denomA = 0;
     let denomB = 0;
     let meanA = calculateMean(userA, ratingsMatrix);
     let meanB = calculateMean(userB, ratingsMatrix);
+    let A_ratings = ratingsMatrix[userA]
+    let B_ratings = ratingsMatrix[userB]
 
-    const ratingsMatrix = userA;
-    
-
-
-
-
-
-
-    
-
-    
-
-
-
-     
-    // the numerator and denominator 
-
-
-    for(let i = 0; i < userA.length; i++){
-
-        const deviationA = userA[i] - meanA;
-        const deviationB = userB[i] - meanB;
-
-        //updating all 
-        num += deviationA * deviationB;
-        denomA += deviationA ** 2;
-        denomB += deviationB ** 2;
-
+    for(let i = 0; i < A_ratings.length; ++i){
+        if(A_ratings[i] !== -1 && B_ratings[i] !== -1){
+            numerator += (A_ratings[i] - meanA) * (B_ratings[i] - meanB);
+            denomA += Math.pow(A_ratings[i] - meanA, 2)
+            denomB += Math.pow(B_ratings[i] - meanB, 2)
+        }
     }
 
-    const denominator = Math.sqrt(denomA) * Math.sqrt(denomB);
-
-    if (demoninator === 0){
-        return 0 
-    }
-
-    return num / denominator;
-
-
-
-
+    return numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
 }
 
 //Input: userA is an integer representing the index of a user in ratingsMatrix
@@ -114,8 +95,8 @@ function getPearsonCorrelations(userA, ratingsMatrix){
 
     let correlations = {}
     for(let userB = 0; userB < ratingsMatrix.length; ++userB){
-        if(i !== userA){
-            correlations[userB] = correlations.pearsonCorrelation(userA, userB, ratingsMatrix)
+        if(userB !== userA){
+            correlations[userB] = pearsonCorrelation(userA, userB, ratingsMatrix)
         }
     }
 
@@ -136,10 +117,14 @@ function getMissingRatings(ratingsMatrix){
                 }
             }
         }
-        console.log(ratingIndicies);
+        // console.log(ratingIndicies);
+        return ratingIndicies;
+
     }catch (error) {
         console.error('Error in getMissingRatings function:', error);
     }
+
+    return []
 }
 
 //Input: user is an integer representing the user name e.g user = 1 for user1
@@ -147,48 +132,63 @@ function getMissingRatings(ratingsMatrix){
 //Output: integer representing user's predicted rating for item itemNum
 function predictRating(user, itemNum, ratingsMatrix, correlations){
     let r_a_mean = calculateMean(user, ratingsMatrix)
+
     let correlationsList = getMaxCorrelations(correlations)
     let numerator = 0;
     let denominator = 0;
-    for(let i = 0; i < correlationsList; ++i){
-        let b_idx = correlationsList[0]
-        let b_corr = correlationsList[1]
+    for(let i = 0; i < correlationsList.length; ++i){
+        let b_idx = correlationsList[i][0]
+        let b_corr = correlationsList[i][1]
         let r_b_p = ratingsMatrix[b_idx][itemNum]
         if(r_b_p === -1){
             continue;
         }
-        let r_b_mean = calculateMean()
+        let r_b_mean = calculateMean(b_idx, ratingsMatrix)
+
         numerator += (b_corr * (r_b_p - r_b_mean));
         denominator += b_corr
     }
 
     let predictedRating = r_a_mean + numerator/denominator;
-    return predictedRating;
+    return Math.round(predictedRating*100)/100;
 
 }
 
 //for every missing index, perform 
-function main(){
+async function main(){
     for(let i = 0; i < TEST_FILE_NAMES.length; ++i){
         let filename = TEST_FILE_NAMES[i]
-        let parsedData = extractUserInfo(filename)
+        let parsedData = await extractUserInfo(filename);
         let ratingsMatrix = parsedData.ratings;
-        let numUsers = parsedData.userCount;
-        let numItems = parsedData.itemCount;
-        let missingIndicies = getMissingRating(ratingsMatrix)
+        let testFilename = "out-" + filename;
+        let testRatingsMatrix = (await extractUserInfo(testFilename)).ratings;
+        let missingIndicies = getMissingRatings(ratingsMatrix)
+        let missingValues = []
 
         //Predict the rating for every user with a missing rating
         for(let j = 0; j < missingIndicies.length; ++j){
-            let userIdx = missingIndicies[i][0]
-            let itemIdx = missingIndicies[i][1]
-            let correlations = getPearsonCorrelations(userIdx)
-            let predictedRating = predictRating(userIdx, itemIdx, correlations)
-            ratingsMatrix[userIdx][itemIdx] = predictedRating
+            let userIdx = missingIndicies[j][0]
+            let itemIdx = missingIndicies[j][1]
+            let correlations = getPearsonCorrelations(userIdx, ratingsMatrix)
+            let predictedRating = predictRating(userIdx, itemIdx, ratingsMatrix, correlations)
+            console.log("predicted rating of ratingsMatrix[" + userIdx +"][" + itemIdx +"]: " + predictedRating)
+            console.log("correct rating of ratingsMatrix[" + userIdx +"][" + itemIdx +"]: " + testRatingsMatrix[userIdx][itemIdx])
+            missingValues.push(predictRating)
+            // ratingsMatrix[userIdx][itemIdx] = predictedRating
+        }
+
+        for(let k = 0; k < missingValues; ++k){
+            let userIdx = missingIndicies[k][0]
+            let itemIdx = missingIndicies[k][1]
+            ratingsMatrix[userIdx][itemIdx] = missingValues[k]
         }
 
         console.log("Output for:",filename)
-        console.log(ratingsMatrix)
+        // console.log(ratingsMatrix)
+
     }
 }
+
+main();
 
 
