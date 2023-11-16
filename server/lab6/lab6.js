@@ -64,6 +64,7 @@ function pearsonCorrelation(userA, userB,ratingsMatrix){
     let meanA = calculateMean(userA, ratingsMatrix);
     let meanB = calculateMean(userB, ratingsMatrix);
 
+    const ratingsMatrix = userA;
     
 
 
