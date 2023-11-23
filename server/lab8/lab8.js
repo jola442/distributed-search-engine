@@ -57,6 +57,73 @@ function calculateMean(user, ratingsMatrix){
     }
 }
 
+// 1,2,3,4,5,6,7,9,10
+// avg = sum/count
+// avg = 55/10 = 5.5
+// {0: {avg: 5.5, count: 10}}
+// taking out 8
+// {0: {avg}}
+// old_sum = avg * count
+// new_sum = old_sum - 8
+// count = old_count - 1 
+// new_avg = new_sum/new_count
+
+function populateMeanMap(ratingsMatrix){
+    //meanMap = {userIdx: {avg: 20, count: 5}}
+}
+
+//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
+//       userIdx is the user index of the rating being predicted
+//       itemIdx is the item index of the rating being predicted
+//       meanMap is an object of the form {0: {avg: 20, count: 5}} where 0 is the user index
+//Output: an updated meanMap that excludes the rating at ratingsMatrix[userIdx][itemIdx] from the map
+function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap){
+    let old_sum = 0;
+    let old_count = 0;
+    let userRatings = ratingsMatrix[userIdx];
+    for(let i = 0; i < userRatings.length; i++){
+        if(userRatings[i] != 0){
+            let excludeNum = userRatings[itemIdx];
+            old_sum += userRatings[i];
+            old_count++;
+            let old_avg = old_sum/old_count;
+            let new_sum = old_sum - excludeNum;
+            let new_count = old_count - 1;
+            let new_avg = new_sum/new_count;
+            meanMap[userIdx] = {avg: new_avg, count: new_count};
+        }
+    }
+    return meanMap;
+}
+
+
+function populateSimMatrix(ratingsMatrix){
+
+}
+
+function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, simMatrix){
+
+}
+
+function populatePredMatrix(ratingsMatrix, correlations){
+    //for all ratings != 0, remove the rating and predict it
+    //return predCount
+}
+
+function calculateMAE(predMatrix, ratingsMatrix){
+    // sum up predMatrix[i][j] - ratingsMatrix[i][j]
+    // divide by predCount returned by populatePredMatrix
+}
+
+
+//Input: correlations is an object with user indicies as keys and their correlations with a specified user as values
+//Output: a sorted 2D array (by correlation values), the first element of each inner array is the user index, the second element is the correlation with a specified user,
+function getMaxCorrelations(correlations){
+    correlationsList = Object.entries(correlations);
+    correlationsList.sort( (a, b) => (b[1]-a[1]) );
+    return correlationsList.slice(0, NEIGHBOURHOOD_SIZE);
+}
+
 //Input: userA and userB are the integers representing the indicies of the users in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: float representing Pearson Correlation Coefficient
