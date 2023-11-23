@@ -58,7 +58,38 @@ function calculateMean(user, ratingsMatrix){
 }
 
 function populateMeanMap(ratingsMatrix){
+
+
+
+
+    
     //meanMap = {userIdx: {avg: 20, count: 5}}
+    const meanMap = {};
+
+    for(let userIdx = 0; userIdx < ratingsMatrix.length; userIdx++){
+        const userRatings = ratingsMatrix[userIdx];
+
+        let sum = 0;
+        let count = 0;
+
+        for(let itemIndex = 0; itemIndex < userRatings.length; itemIndex++ ){
+            if(!isNaN(userRatings[itemIndex])){
+                sum += userRatings[itemIndex];
+                count++;
+            }
+        }
+
+
+        if(count > 0){
+            const average = sum/count;
+
+            meanMap[userIdx] = {avg: average, count: count };
+        }
+    }
+    return meanMap;
+
+
+
 }
 
 // update meanMap[userIdx] to exclude the rating at ratingsMatrix[userIdx][itemIdx]
