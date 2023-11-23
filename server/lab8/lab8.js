@@ -57,17 +57,6 @@ function calculateMean(user, ratingsMatrix){
     }
 }
 
-// 1,2,3,4,5,6,7,9,10
-// avg = sum/count
-// avg = 55/10 = 5.5
-// {0: {avg: 5.5, count: 10}}
-// taking out 8
-// {0: {avg}}
-// old_sum = avg * count
-// new_sum = old_sum - 8
-// count = old_count - 1 
-// new_avg = new_sum/new_count
-
 function populateMeanMap(ratingsMatrix){
     //meanMap = {userIdx: {avg: 20, count: 5}}
 }
@@ -95,26 +84,6 @@ function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap){
     }
     return meanMap;
 }
-
-
-function populateSimMatrix(ratingsMatrix){
-
-}
-
-function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, simMatrix){
-
-}
-
-function populatePredMatrix(ratingsMatrix, correlations){
-    //for all ratings != 0, remove the rating and predict it
-    //return predCount
-}
-
-function calculateMAE(predMatrix, ratingsMatrix){
-    // sum up predMatrix[i][j] - ratingsMatrix[i][j]
-    // divide by predCount returned by populatePredMatrix
-}
-
 
 //Input: correlations is an object with user indicies as keys and their correlations with a specified user as values
 //Output: a sorted 2D array (by correlation values), the first element of each inner array is the user index, the second element is the correlation with a specified user,
