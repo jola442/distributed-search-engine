@@ -60,6 +60,7 @@ function calculateMean(user, ratingsMatrix){
 //Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: A matrix where each entry is the user's rating of the product - the user's average rating
 function getRatingsDiffMatrix(ratingsMatrix){
+    console.log(ratingsMatrix);
     const numRows = ratingsMatrix.length;
     const numCols = ratingsMatrix[0].length;
 
