@@ -1,7 +1,7 @@
 
 const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
 // const TEST_FILE_NAMES = ["test2.txt"]
-const NEIGHBOURHOOD_SIZE = 2;
+const NEIGHBOURHOOD_SIZE = 5;
 let fs = require('fs').promises;
 let path = require('path');
 
@@ -103,7 +103,7 @@ function getPearsonCorrelations(userA, ratingsMatrix){
     return correlations;
 }
 
-//Input: A n x m matrix where n is the number of users and m is the number of items
+//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: An array of two elements representing the user index and the item index of the missing matrix entry
 function getMissingRatings(ratingsMatrix){
     try{
@@ -129,10 +129,11 @@ function getMissingRatings(ratingsMatrix){
 
 //Input: user is an integer representing the user name e.g user = 1 for user1
 //       itemNum is an integer representing the number of the item
+//       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
+//       correlations is an object where each property is the index of a userB and the value is the similarity between user (input from this function) and userB
 //Output: integer representing user's predicted rating for item itemNum
 function predictRating(user, itemNum, ratingsMatrix, correlations){
     let r_a_mean = calculateMean(user, ratingsMatrix)
-
     let correlationsList = getMaxCorrelations(correlations)
     let numerator = 0;
     let denominator = 0;
@@ -185,6 +186,20 @@ async function main(){
 
     }
 }
+
+// We want to take a rating out and use all the other ratings to predict that rating
+// Then compare the rating we took out to our predicted rating
+// We need a way to recalculate user ratings averages and similarities without having to recompute the whole thing
+// testset_u is the ratings predicted for user u
+// MAE is the sum of all the absolute errors for each user / the sum of the number of predictions made for each user
+
+//Edge cases:
+// If a rating is 0, we do not take it out or perform a prediction on it
+// If the denominator of a calculation is 0, this should not be included as a real prediction.
+// Instead, a suitable “best guess” to make in any of these cases would be the average rating score of the user 
+//(remember to compute it by ignoring the current rating that we are predicting). 
+// If the neighbourhood size is X but we don't have X neighbours we should use as many as possible
+// The neighbours must have also rated the item we are predicting the rating for.
 
 main();
 
