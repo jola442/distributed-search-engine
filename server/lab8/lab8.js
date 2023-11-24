@@ -1,6 +1,7 @@
 
 // const TEST_FILE_NAMES = ["test1.txt", "test2.txt", "test3.txt"]
 const TEST_FILE_NAMES = ["parsed-data-trimmed.txt"]
+// const TEST_FILE_NAMES = ["test1.txt"]
 const NEIGHBOURHOOD_SIZE = 5;
 let fs = require('fs').promises;
 let path = require('path');
@@ -28,41 +29,7 @@ async function extractUserInfo(filename){
       }
 }
 
-
-//Input: user - an integer representing the index of a user in ratingsMatrix
-//       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: Average rating of the user
-function calculateMean(user, ratingsMatrix){
-    let sum = 0
-    let userRatings = ratingsMatrix[user]
-    // console.log("User ratings",userRatings)
-    // console.log("Ratings matrix", ratingsMatrix)
-    let count = 0;
-    for(let i = 0; i < userRatings.length; ++i){
-        if(userRatings[i] !== -1 && userRatings[i] !== 0){
-            sum += userRatings[i]
-            count++;
-        }
-        
-    }
-
-    // console.log("Count:", count)
-    // console.log("Sum:", sum)
-    if(count > 0){
-        return sum/count
-    }
-
-    else{
-        return 0;
-    }
-}
-
 function populateMeanMap(ratingsMatrix){
-
-
-
-
-    
     //meanMap = {userIdx: {avg: 20, count: 5}}
     const meanMap = {};
 
@@ -73,7 +40,7 @@ function populateMeanMap(ratingsMatrix){
         let count = 0;
 
         for(let itemIndex = 0; itemIndex < userRatings.length; itemIndex++ ){
-            if(!isNaN(userRatings[itemIndex])){
+            if(userRatings[itemIndex] !== 0){
                 sum += userRatings[itemIndex];
                 count++;
             }
@@ -82,14 +49,14 @@ function populateMeanMap(ratingsMatrix){
 
         if(count > 0){
             const average = sum/count;
-
             meanMap[userIdx] = {avg: average, count: count };
+        }
+
+        else{
+            meanMap[userIdx] = {avg:0, count:0}
         }
     }
     return meanMap;
-
-
-
 }
 
 //Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
@@ -97,22 +64,28 @@ function populateMeanMap(ratingsMatrix){
 //       itemIdx is the item index of the rating being predicted
 //       meanMap is an object of the form {0: {avg: 20, count: 5}} where 0 is the user index
 //Output: an updated meanMap that excludes the rating at ratingsMatrix[userIdx][itemIdx] from the map
-function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap){
-    let old_sum = 0;
-    let old_count = 0;
-    let userRatings = ratingsMatrix[userIdx];
-    for(let i = 0; i < userRatings.length; i++){
-        if(userRatings[i] != 0){
-            let excludeNum = userRatings[itemIdx];
-            old_sum += userRatings[i];
-            old_count++;
-            let old_avg = old_sum/old_count;
-            let new_sum = old_sum - excludeNum;
-            let new_count = old_count - 1;
-            let new_avg = new_sum/new_count;
-            meanMap[userIdx] = {avg: new_avg, count: new_count};
-        }
+function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
+    if(ratingsMatrix[userIdx][itemIdx] == 0){
+        let old_sum = meanMap[userIdx].avg * meanMap[userIdx].count;
+        let old_count = meanMap[userIdx].count;
+        let excludeNum = oldValue;
+        let new_sum = old_sum - excludeNum;
+        let new_count = old_count - 1;
+        let new_avg = new_sum/new_count;
+        meanMap[userIdx] = {avg: new_avg, count: new_count};
     }
+
+    else{
+        let old_sum = meanMap[userIdx].avg * meanMap[userIdx].count;
+        let old_count = meanMap[userIdx].count;
+        let includeNum = ratingsMatrix[userIdx][itemIdx];
+        let new_sum = old_sum + includeNum;
+        let new_count = old_count + 1;
+        let new_avg = new_sum/new_count;
+        meanMap[userIdx] = {avg: new_avg, count: new_count};
+    }
+ 
+
     return meanMap;
 }
 
@@ -134,118 +107,88 @@ function pearsonCorrelation(userA, userB, ratingsMatrix, meanMap){
     // let meanA = calculateMean(userA, ratingsMatrix);
     // let meanB = calculateMean(userB, ratingsMatrix);
     let meanA = meanMap[userA].avg
+    // console.log(userB)
     let meanB = meanMap[userB].avg
     let A_ratings = ratingsMatrix[userA]
     let B_ratings = ratingsMatrix[userB]
 
+    // console.log("Calculating the similarity for user at index", userA, userB)
+    count = 0
     for(let i = 0; i < A_ratings.length; ++i){
         if(A_ratings[i] !== 0 && B_ratings[i] !== 0){
+            count++
+            // console.log(userA, "gave a rating of", A_ratings[i])
+            // console.log(userB, "gave a rating of", B_ratings[i])
             numerator += (A_ratings[i] - meanA) * (B_ratings[i] - meanB);
             denomA += Math.pow(A_ratings[i] - meanA, 2)
             denomB += Math.pow(B_ratings[i] - meanB, 2)
         }
     }
 
+    // console.log("Both users rated", count, "items")
+
     let corr =  numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
-    return {corr, numerator, denomA, denomB}
-}
-
-//check if both users rated the product, if they did update the correlation
-
-// 0 1 2 3 4
-// 2 4 5 2 0
-// 1 4 3 2 1
-
-//   0           1               2             3
-// {0}  {corr:3.4, denomA}   {corr: 3.9}     {corr: 8.2}
-// 
-// 
-
-//Input: userA is an integer representing the index of a user in ratingsMatrix
-//       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: An object with user indicies as keys and their correlations with user A as values
-function getPearsonCorrelations(userA, ratingsMatrix){
-
-    let correlations = {}
-    for(let userB = 0; userB < ratingsMatrix.length; ++userB){
-        if(userB !== userA){
-            correlations[userB] = pearsonCorrelation(userA, userB, ratingsMatrix)
-        }
+    if(!isNaN(corr)){
+        return corr
     }
 
-    return correlations;
+    // console.log("The correlation between", userA, userB, "is", corr)
+    return 0
 }
-
 
 
 //Input: correlations is an object with user indicies as keys and their correlations with a specified user as values
 //Output: a sorted 2D array (by correlation values), the first element of each inner array is the user index, the second element is the correlation with a specified user,
 function getMaxCorrelations(correlations){
-    correlationsList = Object.entries(correlations);
-    correlationsList.sort( (a, b) => (b[1].corr-a[1].corr) );
+    let correlationsList = Object.entries(correlations);
+    correlationsList = correlationsList.filter(entry => (entry[1] > 0)).sort( (a, b) => (b[1]-a[1]) );
     return correlationsList.slice(0, NEIGHBOURHOOD_SIZE);
 }
 
 
 
-
-//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: A nested object. The properties of the object are user indicies. 
-//The value of each property is an object that has the average rating of the user and the number of ratings of the user as properties.
-//e.g  meanMap = {0: {avg: 20, count: 5}}
-function populateMeanMap(ratingsMatrix){
-
-}
-
-//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//       userIdx is the user index of the rating being predicted
-//       itemIdx is the item index of the rating being predicted
-//       meanMap is an object of the form {0: {avg: 20, count: 5}} where 0 is the user index
-//Output: an updated meanMap that excludes the rating at ratingsMatrix[userIdx][itemIdx] from the map
-function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap){
-
-}
-
-function populateSimMatrix(ratingsMatrix){
+//numUsers x numUsers
+// 0 1 2 3
+// 4 4 2 1
+function populateSimMatrix(ratingsMatrix, meanMap){
     let simMatrix = []
     for(let i = 0; i < ratingsMatrix.length; ++i){
         userSimilarities = []
-        for(let j = 0; j < ratingsMatrix[0].length; ++j){
+        for(let j = 0; j < ratingsMatrix.length; ++j){
             if(i == j){
                 userSimilarities.push(0)
+                // console.log(i,"==",j, "so userSimilarities["+i+"]"+"["+j+"] =", 0)
             }
 
             else{
-                let [corr, numerator, denomA, denomB] = pearsonCorrelation(i, j, ratingsMatrix, meanMap)
-                userSimilarities.push({corr, numerator, denomA, denomB})
+                // let {corr, numerator, denomA, denomB} = pearsonCorrelation(i, j, ratingsMatrix, meanMap)
+                let corr = pearsonCorrelation(i, j, ratingsMatrix, meanMap)
+                userSimilarities.push(corr)
+                // console.log("userSimilarities["+i+"]"+"["+j+"] =", corr)
+                // userSimilarities.push({corr, numerator, denomA, denomB})
             }
         }
+        simMatrix.push(userSimilarities)
     }
     return simMatrix;
 }
 
 //remove r_a_p - r_a_mean * r_b_p - r_b_mean from the numerator if ratingsMatrix[userIdx][itemIdx] != 0 for both users
-function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, simMatrix){
+function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, meanMap, simMatrix){
+    //leave one out method
+    // ratingsMatrix[userIdx][itemIdx] = 0
+    // console.log(ratingsMatrix)
+    // console.log(meanMap)
     for(let i = 0; i < ratingsMatrix.length; ++i){
         if(i == userIdx) continue
-        //if user i also rated the item, remove userIdx from their correlation
+        //if user i also rated the 
         if(ratingsMatrix[i][itemIdx] !== 0){
-            // simMatrix[i][userIdx].numerator -= (A_ratings[i] - meanA) * (B_ratings[i] - meanB);
-            let ratingADiff = ratingsMatrix[i][itemIdx] - meanMap[i].avg
-            let ratingBDiff = ratingsMatrix[userIdx][itemIdx] - meanMap[itemIdx].avg
-            let oldDenomA = simMatrix[i][userIdx].denomA
-            let oldDenomB = simMatrix[i][userIdx].denomB
-            // simMatrix[i][userIdx].numerator -= (ratingADiff * ratingBDiff)
-            // simMatrix[i][userIdx].denomA = Math.sqrt( Math.pow(2, oldDenomA) - Math.pow(2, ratingADiff) )
-            // simMatrix[i][userIdx].denomB = Math.sqrt( Math.pow(2, oldDenomB) - Math.pow(2, ratingBDiff) )
-            newNumerator = simMatrix[i][userIdx].numerator - (ratingADiff * ratingBDiff)
-            newDenomA = Math.sqrt( Math.pow(2, oldDenomA) - Math.pow(2, ratingADiff) )
-            newDenomB = Math.sqrt( Math.pow(2, oldDenomB) - Math.pow(2, ratingBDiff) )
-            newCorr = newNumerator/ ((Math.sqrt(newDenomA)) * (Math.sqrt(newDenomB)))
-            simMatrix[i][userIdx].numerator = newNumerator
-            simMatrix[i][userIdx].denomA = newDenomA
-            simMatrix[i][userIdx].denomB = Math.sqrt( Math.pow(2, oldDenomB) - Math.pow(2, ratingBDiff) )
-            simMatrix[i][userIdx].corr = newCorr
+            let corr = pearsonCorrelation(userIdx, i, ratingsMatrix, meanMap)
+            simMatrix[userIdx][i] = corr
+        }
+
+        else{
+            simMatrix[userIdx][i] = 0
         }
     }
 
@@ -257,16 +200,19 @@ function populatePredMatrix(ratingsMatrix, meanMap, simMatrix){
     let predCount = 0
     for(let i = 0; i < ratingsMatrix.length; ++i){
         let innerArr = []
-        for(let j = 0; j < ratingsMatrix[0].length; ++i){
-            //make a deep copy of ratingsMatrix
-            let leaveOneOutMatrix = JSON.parse(JSON.stringify(ratingsMatrix));
+        for(let j = 0; j < ratingsMatrix[0].length; ++j){
             let predictedRating = 0
             if(ratingsMatrix[i][j] !== 0){
-                leaveOneOutMatrix[i][j] = -1
-                let updatedMeanMap = updateMeanMap(i, j, ratingsMatrix, meanMap)
-                let updatedSimMatrix = updateSimMatrix(i, j, ratingsMatrix, simMatrix)
+                let oldValue = ratingsMatrix[i][j]
+                if(oldValue == 0) continue
+                ratingsMatrix[i][j] = 0
+                meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, oldValue)
+                let updatedSimMatrix = updateSimMatrix(i, j, ratingsMatrix, meanMap, simMatrix)
                 //refactor predictRating to use simMatrix
-                predictedRating = predictRating(i, j, leaveOneOutMatrix, updatedMeanMap, updatedSimMatrix)
+                predictedRating = predictRating(i, j, ratingsMatrix, meanMap, updatedSimMatrix)
+                ratingsMatrix[i][j] = oldValue
+                meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, 0)
+                predCount++;
             }
             innerArr.push(predictedRating)
         }
@@ -297,9 +243,16 @@ function calculateMAE(predMatrix, ratingsMatrix, predCount){
 //       correlations is an object where each property is the index of a userB and the value is the similarity between user (input from this function) and userB
 //Output: integer representing user's predicted rating for item itemNum
 function predictRating(user, itemNum, ratingsMatrix, meanMap, simMatrix){
-    // let r_a_mean = calculateMean(user, ratingsMatrix)
     let r_a_mean = meanMap[user].avg
     let correlationsList = getMaxCorrelations(simMatrix[user])
+    console.log("Predicting for user:", user==0?"Alice":("User"+(user+1)))
+    console.log("Predicting for item", itemNum+1)
+    console.log("Found", correlationsList.length, "valid neighbours:")
+    for(let i = 0; i < correlationsList.length; ++i){
+        console.log(i+1 + ". User" + correlationsList[i][0], "sim = ", correlationsList[i][1])
+    }
+    console.log()
+
     let numerator = 0;
     let denominator = 0;
     for(let i = 0; i < correlationsList.length; ++i){
@@ -316,12 +269,22 @@ function predictRating(user, itemNum, ratingsMatrix, meanMap, simMatrix){
 
     let predictedRating = r_a_mean + numerator/denominator;
     if(!isNaN(predictedRating)){
-        return Math.round(predictedRating*100)/100;
+        if(predictedRating > 5){
+            predictedRating = 5
+        }
+
+        else if(predictedRating < 1){
+            predictedRating = 1
+        }
+        predictedRating = Math.round(predictedRating*100)/100;
     }
 
     else{
-        return r_a_mean
+        predictedRating = r_a_mean
     }
+
+    console.log("Predicted rating:", predictedRating, "\n")
+    return predictedRating
 
 }
 
@@ -332,9 +295,12 @@ async function main(){
         let parsedData = await extractUserInfo(filename);
         let ratingsMatrix = parsedData.ratings;
         let meanMap = populateMeanMap(ratingsMatrix)
-        let simMatrix = populateSimMatrix(ratingsMatrix)
+        let simMatrix = populateSimMatrix(ratingsMatrix, meanMap)
+        // console.log("Sim Matrix:", simMatrix)
         let [predMatrix, predCount] = populatePredMatrix(ratingsMatrix, meanMap, simMatrix)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount)
+        
+        console.log("Total predictions", predCount)
         console.log("MAE = ", MAE)
         // let testFilename = "out-" + filename;
         // let testRatingsMatrix = (await extractUserInfo(testFilename)).ratings;
@@ -378,6 +344,10 @@ async function main(){
 //(remember to compute it by ignoring the current rating that we are predicting). 
 // If the neighbourhood size is X but we don't have X neighbours we should use as many as possible
 // The neighbours must have also rated the item we are predicting the rating for.
+
+
+//find a fast way to find the set of items both users have reviewed without iterating over everything
+//recalculate the similarity for the user that was changed
 
 main();
 
