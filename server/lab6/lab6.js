@@ -85,7 +85,9 @@ function pearsonCorrelation(userA, userB, ratingsMatrix){
         }
     }
 
-    return numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
+    corr = numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
+    console.log("The correlation between", userA, userB, "is", corr)
+    return corr
 }
 
 //Input: userA is an integer representing the index of a user in ratingsMatrix
