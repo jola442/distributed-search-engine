@@ -28,10 +28,20 @@ async function extractUserInfo(filename){
       }
 }
 
-//Input: itemIdx - index of an item
+//Stevo
+//Input: initItems - array of item indicies 
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
+//       userToExclude is a user index representing the user the system is recommending for. They should not be added to the output array
 //Output: an array of user indicies representing users that have liked this item 
-function getUsersThatLikedItem(itemIdx, ratingsMatrix){
+function getUsersThatLikedItems(items, userToExclude, ratingsMatrix){
+
+}
+
+//Ayo
+//Input: userIdx - index of the user
+//       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
+//Output: an array of item indicies representing items that the user at index userIdx has liked 
+function getItemsThatUserLiked(userIdx, ratingsMatrix){
 
 }
 
@@ -77,13 +87,15 @@ async function main(){
       let ratingsMatrix = parsedData.ratings;
       let userIdx = users.indexOf(USER_TO_RECOMMEND_FOR)
       //the items that the user the system is recommending for has already rated
-      let initItems = ratingsMatrix[userIdx].filter( (rating) => (rating == 1))
-      let similarUsers = getUsersThatLikedItem(initItems, ratingsMatrix)
+      let initItems = getItemsThatUserLiked(userIdx, ratingsMatrix)
+      console.log("Items that", USER_TO_RECOMMEND_FOR, "liked", initItems)
+      let similarUsers = getUsersThatLikedItems(initItems, userIdx, ratingsMatrix)
+      console.log("Similar users",similarUsers)
       let pathsArr = generatePathsArr(similarUsers, items, initItems, ratingsMatrix)
       console.log(filename + ":")
       console.log("Recommended items for", users[userIdx]+":")
       for(let j = 0; j < pathsArr.length; ++j){
-        console.log(pathsArr[0], "(" + pathsArr[1] + ")")
+        console.log(pathsArr[j][0], "(" + pathsArr[j][1] + ")")
       }
 
   }
