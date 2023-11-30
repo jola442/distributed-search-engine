@@ -42,6 +42,20 @@ function getUsersThatLikedItems(items, userToExclude, ratingsMatrix){
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: an array of item indicies representing items that the user at index userIdx has liked 
 function getItemsThatUserLiked(userIdx, ratingsMatrix){
+  const likedItems = [];
+  if(userIdx < 0 || userIdx >= ratingsMatrix.length){
+    console.error('wrong user index');
+    return likedItems;
+  }
+
+  const userRatings = ratingsMatrix[userIdx];
+
+  for(let i = 0; i < userRatings.length; i++){
+    if(userRatings[i] === 1){
+      likedItems.push(i);
+    }
+  }
+  return likedItems
 
 }
 
