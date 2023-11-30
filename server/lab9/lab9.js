@@ -34,7 +34,18 @@ async function extractUserInfo(filename){
 //       userToExclude is a user index representing the user the system is recommending for. They should not be added to the output array
 //Output: an array of user indicies representing users that have liked this item 
 function getUsersThatLikedItems(items, userToExclude, ratingsMatrix){
-
+  let userIndicies = [];
+    for(let i=0; i<items.length;i++){
+      let item = items[i];
+      for(let j = 0; j < ratingsMatrix.length; ++j){
+        if(j !== userToExclude && ratingsMatrix[j][item] == 1)
+        //making sure there are no duplicates indicies in the array
+        if(!userIndicies.includes(j)){
+          userIndicies.push(j);
+        }
+    }
+  }
+  return userIndicies;
 }
 
 //Ayo
