@@ -1,4 +1,5 @@
-const TEST_FILE_NAMES = ["test.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt"]
+// const TEST_FILE_NAMES = ["test.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt"]
+const TEST_FILE_NAMES = ["test5.txt"]
 const USER_TO_RECOMMEND_FOR = "User1"
 
 let fs = require('fs').promises;
@@ -38,11 +39,12 @@ function getUsersThatLikedItems(items, userToExclude, ratingsMatrix){
     for(let i=0; i<items.length;i++){
       let item = items[i];
       for(let j = 0; j < ratingsMatrix.length; ++j){
-        if(j !== userToExclude && ratingsMatrix[j][item] == 1)
+        if(j !== userToExclude && ratingsMatrix[j][item] == 1){
         //making sure there are no duplicates indicies in the array
-        if(!userIndicies.includes(j)){
+        // if(!userIndicies.includes(j)){
           userIndicies.push(j);
-        }
+        // }
+      }
     }
   }
   return userIndicies;
@@ -71,7 +73,8 @@ function generatePathsArr(similarUsers, items, unrecommendableItems, ratingsMatr
       let itemName = items[j]
       //if the user likes the item and it can be recommended
       if(userRatings[j] == 1 && !unrecommendableItems.includes(j)){
-        if(pathsMap[itemName]){
+        console.log("Encountered", items[j], "through user", (i+1))
+        if(pathsMap.hasOwnProperty(itemName)){
           pathsMap[itemName]++
         }
 
@@ -104,7 +107,7 @@ async function main(){
       console.log("Similar users",similarUsers)
       let pathsArr = generatePathsArr(similarUsers, items, initItems, ratingsMatrix)
       console.log(filename + ":")
-      console.log("Recommended items for", users[userIdx]+":")
+      // console.log("Recommended items for", users[userIdx]+":")
       for(let j = 0; j < pathsArr.length; ++j){
         console.log(pathsArr[j][0], "(" + pathsArr[j][1] + ")")
       }
