@@ -66,6 +66,11 @@ function populateMeanMap(ratingsMatrix){
 //       meanMap is an object of the form {0: {avg: 20, count: 5}} where 0 is the user index
 //Output: an updated meanMap that excludes the rating at ratingsMatrix[userIdx][itemIdx] from the map
 function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
+    if(!meanMap[userIdx]){
+        // console.log(userIdx)
+        // console.log(meanMap)
+    }
+   
     if(ratingsMatrix[userIdx][itemIdx] == 0){
         let old_sum = meanMap[userIdx].avg * meanMap[userIdx].count;
         let old_count = meanMap[userIdx].count;
@@ -90,11 +95,44 @@ function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
     return meanMap;
 }
 
+function populateItemRatings(ratingsMatrix){
+    let itemRatings = {}
+    for(let i = 0; i < ratingsMatrix.length; ++i){
+        for(let j = 0; j < ratingsMatrix[0].length; ++j){
+            if(!itemRatings[j]){
+                itemRatings[j] = new Set();
+            }
+
+            if(ratingsMatrix[i][j] !== 0){
+                itemRatings[j].add(i)
+            }
+        }
+    }
+    
+    return itemRatings
+}
+
+function updateItemRatings(i, j, ratingsMatrix, itemRatings){
+    // console.log(itemRatings)
+    if(ratingsMatrix[i][j] == 0){
+        itemRatings[j].delete(i)
+        // console.log("deleting i from itemRatings["+j+"]", itemRatings[j])
+    }
+
+    else{
+        itemRatings[j].add(i)
+        // console.log("adding",i, "to itemRatings["+j+"]", itemRatings[j])
+    }
+
+    return itemRatings
+}   
+
 //Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: A matrix where each entry is the user's rating of the product - the user's average rating
 function populateRatingsDiffMatrix(ratingsMatrix, meanMap){
     const numRows = ratingsMatrix.length;
     const numCols = ratingsMatrix[0].length;
+    let itemRatings = {}
 
     //calculate the rating difference matrix
     const diffMatrix = [];
@@ -104,6 +142,10 @@ function populateRatingsDiffMatrix(ratingsMatrix, meanMap){
             if(ratingsMatrix[i][j] === 0){
                 diffMatrix[i].push('NA');
             } else{
+                if(!itemRatings[j]){
+                    itemRatings[j] = new Set();
+                }
+                itemRatings[j].add(i)
                 diffMatrix[i].push(ratingsMatrix[i][j] - meanMap[i].avg);
             }
         }
@@ -116,9 +158,24 @@ function populateRatingsDiffMatrix(ratingsMatrix, meanMap){
 //recalculate ratingsMatrixDiff entries for that user
 
 
-function updateRatingsDiffMatrix(userIdx, ratingsMatrix, ratingsDiffMatrix, meanMap){
+function updateRatingsDiffMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings){
     let userRatingDiffs = ratingsDiffMatrix[userIdx]
-    // console.log(meanMap)
+    // console.log("meanMap in updateRatingsDiffMatrix()", meanMap)
+    // console.log("userRatingDiffs", userRatingDiffs)
+    // console.log("itemRatings before func", itemRatings)
+
+    if(ratingsMatrix[userIdx][itemIdx] == 0){
+        // console.log("itemRatings", itemRatings)
+        itemRatings[itemIdx].delete(userIdx);
+        // console.log("after deleting", userIdx, "from itemRatings["+itemIdx+"]", itemRatings)
+    }
+
+    else{
+        // console.log("itemRatings", itemRatings)
+        itemRatings[itemIdx].add(userIdx)
+        // console.log("after adding", userIdx, "to itemRatings["+itemIdx+"]", itemRatings)
+
+    }
     
     for(let i = 0; i < userRatingDiffs.length; ++i){
         if(ratingsMatrix[userIdx][i] === 0){
@@ -128,10 +185,13 @@ function updateRatingsDiffMatrix(userIdx, ratingsMatrix, ratingsDiffMatrix, mean
         else{
             // console.log(ratingsMatrix[userIdx][i], "-", meanMap[userIdx].avg, "=", ratingsMatrix[userIdx][i] - meanMap[userIdx].avg)
             userRatingDiffs[i] = ratingsMatrix[userIdx][i] - meanMap[userIdx].avg
+            itemRatings[i].add(userIdx)
         }
     }
  
-    // console.log("userRatingDiffs after func",userRatingDiffs)
+    // console.log("ratingsDiff after func",ratingsDiffMatrix)
+    // console.log("itemRatings after func", itemRatings)
+    
 
     return ratingsDiffMatrix;
 }
@@ -139,24 +199,38 @@ function updateRatingsDiffMatrix(userIdx, ratingsMatrix, ratingsDiffMatrix, mean
 //Input: itemA and itemB are the integers representing the indicies of the items in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
 //Output: float representing the adjusted cosine similarity between the two items
-function getSimilarity(itemA, itemB, ratingsDiffMatrix){
+function getSimilarity(itemA, itemB, ratingsDiffMatrix, itemRatings){
     let numerator = 0;
     let denomA = 0;
     let denomB = 0;
-    let itemA_Matrix = [];
-    let itemB_Matrix = []
-    for (let i = 0; i < ratingsDiffMatrix.length; ++i) {
-        itemA_Matrix.push(ratingsDiffMatrix[i][itemA]);
-        itemB_Matrix.push(ratingsDiffMatrix[i][itemB]);
+    // let itemA_Matrix = [];
+    // let itemB_Matrix = []
+    // for (let i = 0; i < ratingsDiffMatrix.length; ++i) {
+    //     itemA_Matrix.push(ratingsDiffMatrix[i][itemA]);
+    //     itemB_Matrix.push(ratingsDiffMatrix[i][itemB]);
+    // }
+    // if(itemA == 49){console.log(itemRatings)}
+
+    if(!itemRatings.hasOwnProperty(itemA) || !itemRatings.hasOwnProperty(itemB)){
+        return 0
     }
+    let usersWhoRatedItemA = itemRatings[itemA]
+    let usersWhoRatedItemB = itemRatings[itemB]
     
-    for(let i = 0; i < ratingsDiffMatrix.length; ++i){
-        if (itemA_Matrix[i] !== "NA" && itemB_Matrix[i] !== "NA") {
-            numerator += (itemA_Matrix[i]) * (itemB_Matrix[i]);
-            denomA += Math.pow(itemA_Matrix[i], 2)
-            denomB += Math.pow(itemB_Matrix[i], 2)
-        }
+    const usersWhoRatedBothItems = new Set([...usersWhoRatedItemA].filter(value => usersWhoRatedItemB.has(value)));
+
+    for(const user of usersWhoRatedBothItems){
+        numerator += ratingsDiffMatrix[user][itemA] * ratingsDiffMatrix[user][itemB];
+        denomA += Math.pow(ratingsDiffMatrix[user][itemA], 2)
+        denomB += Math.pow(ratingsDiffMatrix[user][itemB], 2)
     }
+    // for(let i = 0; i < ratingsDiffMatrix.length; ++i){
+    //     if (itemA_Matrix[i] !== "NA" && itemB_Matrix[i] !== "NA") {
+            // numerator += (itemA_Matrix[i]) * (itemB_Matrix[i]);
+            // denomA += Math.pow(itemA_Matrix[i], 2)
+            // denomB += Math.pow(itemB_Matrix[i], 2)
+    //     }
+    // }
 
     let sim = numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
 
@@ -167,7 +241,7 @@ function getSimilarity(itemA, itemB, ratingsDiffMatrix){
     return 0
 }
 
-function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix){
+function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix, itemRatings){
     let simMatrix = []
     for(let i = 0; i < ratingsMatrix[0].length; ++i){
         itemSimilarities = []
@@ -178,8 +252,15 @@ function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix){
             }
 
             else{
-                let sim = getSimilarity(i, j, ratingsDiffMatrix)
-                itemSimilarities.push(sim)
+                if(simMatrix[j] && simMatrix[j][i]){
+                    itemSimilarities.push(simMatrix[j][i])
+                }
+
+                else{
+                    let sim = getSimilarity(i, j, ratingsDiffMatrix, itemRatings)
+                    itemSimilarities.push(sim)
+                }
+     
             }
         }
         simMatrix.push(itemSimilarities)
@@ -195,7 +276,7 @@ function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix){
 //ratingsDiffMatrix
 // NA -1 1 2 -2
 // -4 -2 0 2  4
-function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, simMatrix){
+function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, simMatrix, itemRatings){
     // console.log("Sim Matrix", simMatrix)
     //given that a user's predicted rating of an item is to be calculated,
     //calculate the similarity between the user and all other users who have rated the item
@@ -204,7 +285,7 @@ function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, sim
 
         //if the user the system is predicting for has rated the item 
         if(ratingsMatrix[userIdx][i] !== 0){
-            let sim = getSimilarity(itemIdx, i, ratingsDiffMatrix)
+            let sim = getSimilarity(itemIdx, i, ratingsDiffMatrix, itemRatings)
             simMatrix[itemIdx][i] = sim
         }
 
@@ -263,7 +344,7 @@ function predictRating(users, items, user, itemNum, ratingsMatrix, meanMap, simM
         denominator += sim_ip
     }
 
-    let predictedRating = numerator/denominator;
+    let predictedRating = hasNegativeSims?numerator/Math.abs(denominator):numerator/denominator;
 
     if(!isNaN(predictedRating)){
         if(predictedRating > 5){
@@ -292,9 +373,10 @@ function predictRating(users, items, user, itemNum, ratingsMatrix, meanMap, simM
 }
 
 
-function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, k, t, hasNegativeSims){
+function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, k, t, hasNegativeSims){
     let predMatrix = []
     let predCount = 0
+    // console.log("meanMap before loop", meanMap)
 
     for(let i = 0; i < ratingsMatrix.length; ++i){
         let innerArr = []
@@ -306,13 +388,20 @@ function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, mean
                 let oldValue = ratingsMatrix[i][j]
                 ratingsMatrix[i][j] = 0
                 meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, oldValue)
-                ratingsDiffMatrix = updateRatingsDiffMatrix(i, ratingsMatrix, ratingsDiffMatrix, meanMap)
-                let updatedSimMatrix = updateSimMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, simMatrix)
+                // console.log("meanMap after 1st update", meanMap)
+                itemRatings = updateItemRatings(i, j, ratingsDiffMatrix, itemRatings)
+                // console.log("itemRatings before 1st update", itemRatings)
+                ratingsDiffMatrix = updateRatingsDiffMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings)
+                // console.log("newRatingsDiffMatrix",ratingsDiffMatrix)
+                // console.log("newItemRatings", itemRatings)
+                let updatedSimMatrix = updateSimMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, simMatrix, itemRatings)
                 predictedRating = predictRating(users, items, i, j, ratingsMatrix, meanMap, updatedSimMatrix, k, t, hasNegativeSims)
                 //reset the rating of the item back to its original value
                 ratingsMatrix[i][j] = oldValue
                 meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, 0)
-                ratingsDiffMatrix = updateRatingsDiffMatrix(i, ratingsMatrix, ratingsDiffMatrix, meanMap)
+                // console.log("meanMap after 2nd update", meanMap)
+                itemRatings = updateItemRatings(i, j, ratingsMatrix, itemRatings)
+                ratingsDiffMatrix = updateRatingsDiffMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings)
                 predCount++;
             }
             innerArr.push(predictedRating)
@@ -339,14 +428,14 @@ function calculateMAE(predMatrix, ratingsMatrix, predCount){
     return MAE
 }
 
-function testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix){
+function testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings){
     console.log("-----------------------------------------------------------")
     console.log("Top-K Neighbours Ignoring Negative Similarities")
     console.log("-----------------------------------------------------------")
     let hasNegativeSims = false;
     for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
         let k = NEIGHBOURHOOD_SIZES[j]
-        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
+        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, k, null, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Neighbourhood Size", k)
         console.log("Total predictions", predCount)
@@ -354,23 +443,23 @@ function testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, mean
     }
 
     
-    // hasNegativeSims = true;
-    // console.log("-----------------------------------------------------------")
-    // console.log("Top-K Neighbours Including Negative Similarities")
-    // console.log("-----------------------------------------------------------")
+    hasNegativeSims = true;
+    console.log("-----------------------------------------------------------")
+    console.log("Top-K Neighbours Including Negative Similarities")
+    console.log("-----------------------------------------------------------")
 
-    // for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
-    //     let k = NEIGHBOURHOOD_SIZES[j]
-    //     let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
-    //     let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
-    //     console.log("Neighbourhood Size", k)
-    //     console.log("Total predictions", predCount)
-    //     console.log("MAE =", MAE, "\n")
-    // }
+    for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
+        let k = NEIGHBOURHOOD_SIZES[j]
+        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, k, null, hasNegativeSims)
+        let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
+        console.log("Neighbourhood Size", k)
+        console.log("Total predictions", predCount)
+        console.log("MAE =", MAE, "\n")
+    }
 
 }
 
-function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix){
+function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings){
     console.log("-----------------------------------------------------------")
     console.log("Threshold Ignoring Negative Similarities")
     console.log("-----------------------------------------------------------")
@@ -378,7 +467,7 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMa
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
         let t = THRESHOLDS[j]
-        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
+        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
@@ -393,7 +482,7 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMa
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
         let t = THRESHOLDS[j]
-        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
+        let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
@@ -410,36 +499,23 @@ async function main(){
         let users = parsedData.users;
         let items = parsedData.items;
         let ratingsMatrix = parsedData.ratings;
+        console.log("populating meanMap")
         let meanMap = populateMeanMap(ratingsMatrix)
+        console.log("populating itemRatings")
+        let itemRatings = populateItemRatings(ratingsMatrix)
+        // console.log("ItemRatings",itemRatings)
         console.log("populating ratingsDiffMatrix")
         let ratingsDiffMatrix = populateRatingsDiffMatrix(ratingsMatrix, meanMap)
         console.log("populating simMatrix")
-        let simMatrix = populateSimMatrix(ratingsMatrix, ratingsDiffMatrix)
+        let simMatrix = populateSimMatrix(ratingsMatrix, ratingsDiffMatrix, itemRatings)
         console.log("done populating simMatrix...")
         
         console.log("Filename", filename)
-        testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix)
-        // testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix)
+        testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings)
+        testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings)
     }
     console.timeEnd("main")
 }
 
-// We want to take a rating out and use all the other ratings to predict that rating
-// Then compare the rating we took out to our predicted rating
-// We need a way to recalculate user ratings averages and similarities without having to recompute the whole thing
-// testset_u is the ratings predicted for user u
-// MAE is the sum of all the absolute errors for each user / the sum of the number of predictions made for each user
-
-//Edge cases:
-// If a rating is 0, we do not take it out or perform a prediction on it
-// If the denominator of a calculation is 0, this should not be included as a real prediction.
-// Instead, a suitable “best guess” to make in any of these cases would be the average rating score of the user 
-//(remember to compute it by ignoring the current rating that we are predicting). 
-// If the neighbourhood size is X but we don't have X neighbours we should use as many as possible
-// The neighbours must have also rated the item we are predicting the rating for.
-
-
-//find a fast way to find the set of items both users have reviewed without iterating over everything
-//recalculate the similarity for the user that was changed
 
 main();
