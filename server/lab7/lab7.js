@@ -94,7 +94,7 @@ function getSimilarity(itemA, itemB, ratingsDiffMatrix){
 
 //Input: itemA is an integer representing the index of an item in ratingsMatrix
 //       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: An object with user indicies as keys and their similarities with item A as values
+//Output: An object with item indicies as keys and their similarities with item A as values
 function getSimilarities(itemA, ratingsMatrix, ratingsDiffMatrix){
 
     let similarities = {}
