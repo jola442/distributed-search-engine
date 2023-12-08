@@ -1,7 +1,7 @@
 
-const TEST_FILE_NAMES = ["parsed-data-trimmed.txt"]
-const NEIGHBOURHOOD_SIZES= [5];
-const THRESHOLDS = [0.5]
+const TEST_FILE_NAMES = ["assignment2-data.txt"]
+const NEIGHBOURHOOD_SIZES= [50];
+const THRESHOLDS = [1.0]
 let fs = require('fs').promises;
 let path = require('path');
 
@@ -289,17 +289,24 @@ function calculateMAE(predMatrix, ratingsMatrix, predCount){
 }
 
 function testTopKNeighbours(users, items, ratingsMatrix, meanMap, simMatrix){
+    //let startTime = performance.now();
+    //console.log(startTime);
     console.log("-----------------------------------------------------------")
     console.log("Top-K Neighbours Ignoring Negative Similarities")
     console.log("-----------------------------------------------------------")
     let hasNegativeSims = false;
     for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
+        let startTime = performance.now();
         let k = NEIGHBOURHOOD_SIZES[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Neighbourhood Size", k)
         console.log("Total predictions", predCount)
         console.log("MAE =", MAE, "\n")
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
+        console.log("Execution time = ", finalTime);
+
     }
 
     
@@ -309,12 +316,16 @@ function testTopKNeighbours(users, items, ratingsMatrix, meanMap, simMatrix){
     console.log("-----------------------------------------------------------")
 
     for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
+        let startTime = performance.now();
         let k = NEIGHBOURHOOD_SIZES[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Neighbourhood Size", k)
         console.log("Total predictions", predCount)
         console.log("MAE =", MAE, "\n")
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
+        console.log("Execution time = ", finalTime);
     }
 
 }
@@ -326,12 +337,16 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, meanMap, simM
     let hasNegativeSims = false;
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
+        let startTime = performance.now();
         let t = THRESHOLDS[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
         console.log("MAE =", MAE, "\n")
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
+        console.log("Execution time = ", finalTime);
     }
 
     
@@ -341,12 +356,16 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, meanMap, simM
     console.log("-----------------------------------------------------------")
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
+        let startTime = performance.now();
         let t = THRESHOLDS[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
         console.log("MAE =", MAE, "\n")
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
+        console.log("Execution time = ", finalTime);
     }
 }
 
