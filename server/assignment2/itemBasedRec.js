@@ -6,8 +6,8 @@ const THRESHOLDS = [0.5]
 let fs = require('fs').promises;
 let path = require('path');
 
-//Input: The name of the file in server/lab6
-//Output: A n x m matrix where n is the number of users and m is the number of items
+//Input: filename - the name of the data file
+//Output: An object containing the an array of user names (users), item names (items) and a 2D array of item ratings (ratingsMatrix)
 async function extractUserInfo(filename){
     try {
         let fileContent = await fs.readFile(filename, 'utf8');
@@ -30,6 +30,8 @@ async function extractUserInfo(filename){
       }
 }
 
+//Input: ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//Output: meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
 function populateMeanMap(ratingsMatrix){
     //meanMap = {userIdx: {avg: 20, count: 5}}
     const meanMap = {};
@@ -60,17 +62,14 @@ function populateMeanMap(ratingsMatrix){
     return meanMap;
 }
 
-//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//       userIdx is the user index of the rating being predicted
-//       itemIdx is the item index of the rating being predicted
-//       meanMap is an object of the form {0: {avg: 20, count: 5}} where 0 is the user index
-//Output: an updated meanMap that excludes the rating at ratingsMatrix[userIdx][itemIdx] from the map
+//Input: userIdx - the user index of the rating that was changed in the leave-one-out cross-validation strategy
+//       itemIdx - the item index of the rating that was changed in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       oldValue - The value of the rating before it wa
+//Output: an updated meanMap that reflects the change in the rating of the item at <itemIdx> by the user at <userIdx>
 function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
-    if(!meanMap[userIdx]){
-        // console.log(userIdx)
-        // console.log(meanMap)
-    }
-   
+    //updating the meanMap to reflect the rating was taken out in the leave-one-out cross-validation strategy
     if(ratingsMatrix[userIdx][itemIdx] == 0){
         let old_sum = meanMap[userIdx].avg * meanMap[userIdx].count;
         let old_count = meanMap[userIdx].count;
@@ -81,6 +80,7 @@ function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
         meanMap[userIdx] = {avg: new_avg, count: new_count};
     }
 
+    //updating the meanMap to reflect the rating was brought back in after the leave-one-out cross-validation strategy
     else{
         let old_sum = meanMap[userIdx].avg * meanMap[userIdx].count;
         let old_count = meanMap[userIdx].count;
@@ -95,6 +95,8 @@ function updateMeanMap(userIdx, itemIdx, ratingsMatrix, meanMap, oldValue){
     return meanMap;
 }
 
+//Input: ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//Output: itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
 function populateItemRatings(ratingsMatrix){
     let itemRatings = {}
     for(let i = 0; i < ratingsMatrix.length; ++i){
@@ -112,23 +114,24 @@ function populateItemRatings(ratingsMatrix){
     return itemRatings
 }
 
+//Input: i - the user index of the rating that was changed in the leave-one-out cross-validation strategy
+//       j - the item index of the rating that was changed in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//Output: An updated itemsRatings object that reflects the rating change
 function updateItemRatings(i, j, ratingsMatrix, itemRatings){
-    // console.log(itemRatings)
     if(ratingsMatrix[i][j] == 0){
         itemRatings[j].delete(i)
-        // console.log("deleting i from itemRatings["+j+"]", itemRatings[j])
     }
 
     else{
         itemRatings[j].add(i)
-        // console.log("adding",i, "to itemRatings["+j+"]", itemRatings[j])
     }
 
     return itemRatings
 }   
 
-//Input: ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: A matrix where each entry is the user's rating of the product - the user's average rating
+//Input: ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//Output: ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
 function populateRatingsDiffMatrix(ratingsMatrix, meanMap){
     const numRows = ratingsMatrix.length;
     const numCols = ratingsMatrix[0].length;
@@ -154,63 +157,52 @@ function populateRatingsDiffMatrix(ratingsMatrix, meanMap){
 }
 
 
-//change ratingsDiffMatrix position to NA
-//recalculate ratingsMatrixDiff entries for that user
-
-
+//Input: userIdx - the user index of the rating that was changed in the leave-one-out cross-validation strategy
+//       itemIdx - the item index of the rating that was changed in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//Output: ratingsDiffMatrix - an updated ratingsDiffMatrix that reflects the change in the rating of the item at <itemIdx> by the user at <userIdx>    
 function updateRatingsDiffMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings){
     let userRatingDiffs = ratingsDiffMatrix[userIdx]
-    // console.log("meanMap in updateRatingsDiffMatrix()", meanMap)
-    // console.log("userRatingDiffs", userRatingDiffs)
-    // console.log("itemRatings before func", itemRatings)
 
+    //if the rating was taken out
     if(ratingsMatrix[userIdx][itemIdx] == 0){
-        // console.log("itemRatings", itemRatings)
         itemRatings[itemIdx].delete(userIdx);
-        // console.log("after deleting", userIdx, "from itemRatings["+itemIdx+"]", itemRatings)
     }
 
+    //if the rating was brought back in
     else{
-        // console.log("itemRatings", itemRatings)
         itemRatings[itemIdx].add(userIdx)
-        // console.log("after adding", userIdx, "to itemRatings["+itemIdx+"]", itemRatings)
-
     }
     
+    //recalculating the ratingDiffMatrix for the user at <userIdx>
     for(let i = 0; i < userRatingDiffs.length; ++i){
         if(ratingsMatrix[userIdx][i] === 0){
             userRatingDiffs[i] = "NA"
         }
 
         else{
-            // console.log(ratingsMatrix[userIdx][i], "-", meanMap[userIdx].avg, "=", ratingsMatrix[userIdx][i] - meanMap[userIdx].avg)
             userRatingDiffs[i] = ratingsMatrix[userIdx][i] - meanMap[userIdx].avg
             itemRatings[i].add(userIdx)
         }
     }
  
-    // console.log("ratingsDiff after func",ratingsDiffMatrix)
-    // console.log("itemRatings after func", itemRatings)
-    
 
     return ratingsDiffMatrix;
 }
 
-//Input: itemA and itemB are the integers representing the indicies of the items in ratingsMatrix
-//       ratingsMatrix is an n x m matrix where n is the number of users and m is the number of items
-//Output: float representing the adjusted cosine similarity between the two items
+//Input: itemA, itemB - indicies of the items in items
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//Output: A float representing the adjusted cosine similarity between the two items
 function getSimilarity(itemA, itemB, ratingsDiffMatrix, itemRatings){
     let numerator = 0;
     let denomA = 0;
     let denomB = 0;
-    // let itemA_Matrix = [];
-    // let itemB_Matrix = []
-    // for (let i = 0; i < ratingsDiffMatrix.length; ++i) {
-    //     itemA_Matrix.push(ratingsDiffMatrix[i][itemA]);
-    //     itemB_Matrix.push(ratingsDiffMatrix[i][itemB]);
-    // }
-    // if(itemA == 49){console.log(itemRatings)}
-
+ 
     if(!itemRatings.hasOwnProperty(itemA) || !itemRatings.hasOwnProperty(itemB)){
         return 0
     }
@@ -224,13 +216,6 @@ function getSimilarity(itemA, itemB, ratingsDiffMatrix, itemRatings){
         denomA += Math.pow(ratingsDiffMatrix[user][itemA], 2)
         denomB += Math.pow(ratingsDiffMatrix[user][itemB], 2)
     }
-    // for(let i = 0; i < ratingsDiffMatrix.length; ++i){
-    //     if (itemA_Matrix[i] !== "NA" && itemB_Matrix[i] !== "NA") {
-            // numerator += (itemA_Matrix[i]) * (itemB_Matrix[i]);
-            // denomA += Math.pow(itemA_Matrix[i], 2)
-            // denomB += Math.pow(itemB_Matrix[i], 2)
-    //     }
-    // }
 
     let sim = numerator/ ((Math.sqrt(denomA)) * (Math.sqrt(denomB)))
 
@@ -241,6 +226,10 @@ function getSimilarity(itemA, itemB, ratingsDiffMatrix, itemRatings){
     return 0
 }
 
+//Input: ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//Output: simMatrix - an n x n matrix. The entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
 function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix, itemRatings){
     let simMatrix = []
     for(let i = 0; i < ratingsMatrix[0].length; ++i){
@@ -269,17 +258,14 @@ function populateSimMatrix(ratingsMatrix, ratingsDiffMatrix, itemRatings){
 }
 
 
-//ratingsMatrix
-// 0 0 5 6 2
-// 1 3 5 7 9
-
-//ratingsDiffMatrix
-// NA -1 1 2 -2
-// -4 -2 0 2  4
+//Input: userIdx - the user index of the rating that was changed in the leave-one-out cross-validation strategy
+//       itemIdx - the item index of the rating that was changed in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       simMatrix - an m x m matrix where m is the number of items and the entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//Output: simMatrix - an updated simMatrix that reflects the change in the rating of the item at <itemIdx> by the user at <userIdx>   
 function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, simMatrix, itemRatings){
-    // console.log("Sim Matrix", simMatrix)
-    //given that a user's predicted rating of an item is to be calculated,
-    //calculate the similarity between the user and all other users who have rated the item
     for(let i = 0; i < ratingsMatrix[0].length; ++i){
         if(i == itemIdx) continue
 
@@ -297,8 +283,10 @@ function updateSimMatrix(userIdx, itemIdx, ratingsMatrix, ratingsDiffMatrix, sim
     return simMatrix
 }
 
-//Input: similarities is an object with item indicies as keys and their similarities with a specified item as values
-//Output: a sorted 2D array (by similarity values), the first element of each inner array is the item index, the second element is the similairity with a specified item,
+//Input: similarities - an object with item indicies as keys and their similarities with a specified item as values
+//       k - the number of neighbours
+//       hasNegativeSims - a bool representing whether to include negative similarities in the results
+//Output: a sorted 2D array (by absolute similarity values), the first element of each inner array is the item index, the second element is the similairity with a specified item
 function getTopKNeighbours(similarities, k, hasNegativeSims){
     let similaritiesList = Object.entries(similarities);
     similaritiesList = hasNegativeSims? similaritiesList.filter(entry => (entry[1] > 0 || entry[1] < 0)): similaritiesList.filter(entry => (entry[1] > 0))
@@ -307,6 +295,10 @@ function getTopKNeighbours(similarities, k, hasNegativeSims){
     return similaritiesList.slice(0, k);
 }
 
+//Input: similarities - an object with item indicies as keys and their similarities with a specified item as values
+//       t - the threshold
+//       hasNegativeSims - a bool representing whether to include negative similarities in the results
+//Output: a sorted 2D array of items with similarites greater than t. The first element of each inner array is the item index, the second element is the similairity with a specified item
 function getNeighboursAboveThreshold(similarities, t, hasNegativeSims){
     let similaritiesList = Object.entries(similarities);
     similaritiesList = hasNegativeSims? similaritiesList.filter(entry => (Math.abs(entry[1]) > t)):similaritiesList.filter(entry => (entry[1] > t))
@@ -314,32 +306,38 @@ function getNeighboursAboveThreshold(similarities, t, hasNegativeSims){
 }
 
 
-//Input: user is an integer representing the user name e.g user = 1 for user1
-//       itemNum is an integer representing the number of the item
-//Output: integer representing user's predicted rating for item itemNum
-function predictRating(users, items, user, itemNum, ratingsMatrix, meanMap, simMatrix, k, t, hasNegativeSims){
-    let user_avg = meanMap[user].avg
+//Input: users - an array of user names
+//       items - an array of item names
+//       userIdx - the user index of the rating that was changed in the leave-one-out cross-validation strategy
+//       itemIdx - the item index of the rating that was changed in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       simMatrix - an m x m matrix where m is the number of items and the entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
+//       k - the number of most similar neighbours to select
+//       t - the threshold of similarity
+//       hasNegativeSims - a bool representing whether to include negative similarities in the results
+//Output: predictedRating - a float representing the user at <userIdx>'s predicted rating of the item at <itemIdx>.
+function predictRating(users, items, userIdx, itemIdx, ratingsMatrix, meanMap, simMatrix, k, t, hasNegativeSims){
+    let user_avg = meanMap[userIdx].avg
     let similaritiesList = []
     if(k){
-        similaritiesList = getTopKNeighbours(simMatrix[itemNum], k, hasNegativeSims)
+        similaritiesList = getTopKNeighbours(simMatrix[itemIdx], k, hasNegativeSims)
     }
 
     else if(t){
-        similaritiesList = getNeighboursAboveThreshold(simMatrix[itemNum], t, hasNegativeSims)
+        similaritiesList = getNeighboursAboveThreshold(simMatrix[itemIdx], t, hasNegativeSims)
     }
 
 
-    // console.log("Max similarities", similaritiesList)
     let numerator = 0;
     let denominator = 0;
 
     for(let j = 0; j < similaritiesList.length; ++j){
         let i = similaritiesList[j][0]
-        let r_ui = ratingsMatrix[user][i]
+        let r_ui = ratingsMatrix[userIdx][i]
         let sim_ip = similaritiesList[j][1]
         if(sim_ip < 0 )continue
                 
-        // console.log(sim_ip, "*", r_ui,)
         numerator += (sim_ip * r_ui)
         denominator += sim_ip
     }
@@ -362,7 +360,7 @@ function predictRating(users, items, user, itemNum, ratingsMatrix, meanMap, simM
     }
 
     // console.log("Predicting for user:", users[user])
-    // console.log("Predicting for item", items[itemNum])
+    // console.log("Predicting for item", items[itemIdx])
     // console.log("Found", similaritiesList.length, "valid neighbours:")
     // for(let i = 0; i < similaritiesList.length; ++i){
     //     console.log(i+1 + ".", items[similaritiesList[i][0]], "sim = ", similaritiesList[i][1])
@@ -372,11 +370,22 @@ function predictRating(users, items, user, itemNum, ratingsMatrix, meanMap, simM
     return predictedRating
 }
 
-
+//Input: users - an array of user names
+//       items - an array of item names
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       simMatrix - an m x m matrix where m is the number of items and the entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//       k - the number of most similar neighbours to select
+//       t - the threshold of similarity
+//       hasNegativeSims - a bool representing whether to include negative similarities in the results
+//Output: [predMatrix, predCount]
+//        predMatrix - a 2D matrix where each entry corresponds to the predicted rating if the rating at ratingsMatrix was taken out in the leave-one-out cross-validation strategy
+//        predCount - the number of predictions made
 function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings, k, t, hasNegativeSims){
     let predMatrix = []
     let predCount = 0
-    // console.log("meanMap before loop", meanMap)
 
     for(let i = 0; i < ratingsMatrix.length; ++i){
         let innerArr = []
@@ -384,22 +393,23 @@ function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, mean
             let predictedRating = 0
             //predict the ratings of all non-zero ratings provided by users
             if(ratingsMatrix[i][j] !== 0){
-                //change the rating of the item we want to predict to 0 and remember its actual rating
+                //change the rating of the item we want to predict to 0 and store its actual rating
                 let oldValue = ratingsMatrix[i][j]
                 ratingsMatrix[i][j] = 0
+
+                //update the necessary data structures to reflect the change
                 meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, oldValue)
-                // console.log("meanMap after 1st update", meanMap)
                 itemRatings = updateItemRatings(i, j, ratingsDiffMatrix, itemRatings)
-                // console.log("itemRatings before 1st update", itemRatings)
                 ratingsDiffMatrix = updateRatingsDiffMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings)
-                // console.log("newRatingsDiffMatrix",ratingsDiffMatrix)
-                // console.log("newItemRatings", itemRatings)
                 let updatedSimMatrix = updateSimMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, simMatrix, itemRatings)
+
                 predictedRating = predictRating(users, items, i, j, ratingsMatrix, meanMap, updatedSimMatrix, k, t, hasNegativeSims)
+
                 //reset the rating of the item back to its original value
                 ratingsMatrix[i][j] = oldValue
                 meanMap = updateMeanMap(i, j, ratingsMatrix, meanMap, 0)
-                // console.log("meanMap after 2nd update", meanMap)
+
+                //update the necessary data structures to reflect the change
                 itemRatings = updateItemRatings(i, j, ratingsMatrix, itemRatings)
                 ratingsDiffMatrix = updateRatingsDiffMatrix(i, j, ratingsMatrix, ratingsDiffMatrix, meanMap, itemRatings)
                 predCount++;
@@ -409,11 +419,12 @@ function populatePredMatrix(users, items, ratingsMatrix, ratingsDiffMatrix, mean
         predMatrix.push(innerArr)
     }
     return [predMatrix, predCount]
-    //for all ratings != 0, remove the rating and predict it
-    //return predCount
 }
 
-
+//Input: predMatrix - a 2D matrix where each entry corresponds to the predicted rating if the rating at ratingsMatrix was taken out in the leave-one-out cross-validation strategy
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       predCount - the number of predictions made
+//Output: a float representing the mean absolute error between the predicted ratings and the actual ratings
 function calculateMAE(predMatrix, ratingsMatrix, predCount){
     let numerator = 0
     for(let i = 0; i < predMatrix.length; ++i){
@@ -428,6 +439,14 @@ function calculateMAE(predMatrix, ratingsMatrix, predCount){
     return MAE
 }
 
+//Input: users - an array of user names
+//       items - an array of item names
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       simMatrix - an m x m matrix where m is the number of items and the entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//This function runs tests on the provided dataset, selecting similar items using the top-k neighbours method
 function testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings){
     console.log("-----------------------------------------------------------")
     console.log("Top-K Neighbours Ignoring Negative Similarities")
@@ -459,6 +478,14 @@ function testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, mean
 
 }
 
+//Input: users - an array of user names
+//       items - an array of item names
+//       ratingsMatrix - an n x m matrix where n is the number of users and m is the number of items
+//       ratingsDiffMatrix - a 2D matrix where each entry is <user's rating of the product - the user's average rating>
+//       meanMap - A nested object with user indicies as properties and an object containing the average ratings and number of ratings for each user as values
+//       simMatrix - an m x m matrix where m is the number of items and the entry at simMatrix[i][j] is the similarity between the item at index i and the item at index j
+//       itemRatings - an object that contains item indicies as properties and a set of users that have rated the item as values
+//This function runs tests on the provided dataset, selecting similar items using the threshold method
 function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings){
     console.log("-----------------------------------------------------------")
     console.log("Threshold Ignoring Negative Similarities")
@@ -490,7 +517,6 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMa
     }
 }
 
-//for every missing index, perform 
 async function main(){
     console.time("main")
     for(let i = 0; i < TEST_FILE_NAMES.length; ++i){
@@ -499,17 +525,10 @@ async function main(){
         let users = parsedData.users;
         let items = parsedData.items;
         let ratingsMatrix = parsedData.ratings;
-        console.log("populating meanMap")
         let meanMap = populateMeanMap(ratingsMatrix)
-        console.log("populating itemRatings")
         let itemRatings = populateItemRatings(ratingsMatrix)
-        // console.log("ItemRatings",itemRatings)
-        console.log("populating ratingsDiffMatrix")
         let ratingsDiffMatrix = populateRatingsDiffMatrix(ratingsMatrix, meanMap)
-        console.log("populating simMatrix")
         let simMatrix = populateSimMatrix(ratingsMatrix, ratingsDiffMatrix, itemRatings)
-        console.log("done populating simMatrix...")
-        
         console.log("Filename", filename)
         testTopKNeighbours(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings)
         testNeighboursAboveThreshold(users, items, ratingsMatrix, ratingsDiffMatrix, meanMap, simMatrix, itemRatings)
