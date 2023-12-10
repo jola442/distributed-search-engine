@@ -1,7 +1,7 @@
 
-const TEST_FILE_NAMES = ["parsed-data-trimmed.txt"]
-const NEIGHBOURHOOD_SIZES= [5];
-const THRESHOLDS = [0.5]
+const TEST_FILE_NAMES = ["assignment2-data.txt"]
+const NEIGHBOURHOOD_SIZES= [0,5,10,20,30,50,70,100,150];
+const THRESHOLDS = [-1,0.1,0.2,0.4,0.5,0.7,0.9,1.0]
 let fs = require('fs').promises;
 let path = require('path');
 
@@ -330,17 +330,23 @@ function calculateMAE(predMatrix, ratingsMatrix, predCount){
 //       simMatrix - an n x n matrix. The entry at simMatrix[i][j] is the similarity between the user at index i and the user at index j
 //This function runs tests on the provided dataset, selecting similar items using the top-k neighbours method
 function testTopKNeighbours(users, items, ratingsMatrix, meanMap, simMatrix){
+    //let startTime = performance.now();
+    //console.log(startTime);
     console.log("-----------------------------------------------------------")
     console.log("Top-K Neighbours Ignoring Negative Similarities")
     console.log("-----------------------------------------------------------")
     let hasNegativeSims = false;
     for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
+        let startTime = performance.now()
         let k = NEIGHBOURHOOD_SIZES[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
-        let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
+        let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount)
+        let endTime = performance.now()
+        let finalTime = (endTime - startTime)/1000
         console.log("Neighbourhood Size", k)
         console.log("Total predictions", predCount)
-        console.log("MAE =", MAE, "\n")
+        console.log("MAE =", MAE)
+        console.log("Execution time = ", finalTime, "\n")
     }
 
     
@@ -350,12 +356,16 @@ function testTopKNeighbours(users, items, ratingsMatrix, meanMap, simMatrix){
     console.log("-----------------------------------------------------------")
 
     for(let j = 0; j < NEIGHBOURHOOD_SIZES.length; ++j){
+        let startTime = performance.now();
         let k = NEIGHBOURHOOD_SIZES[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, k, null, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
         console.log("Neighbourhood Size", k)
         console.log("Total predictions", predCount)
-        console.log("MAE =", MAE, "\n")
+        console.log("MAE =", MAE)
+        console.log("Execution time = ", finalTime, "\n")
     }
 
 }
@@ -373,12 +383,16 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, meanMap, simM
     let hasNegativeSims = false;
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
+        let startTime = performance.now();
         let t = THRESHOLDS[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
-        console.log("MAE =", MAE, "\n")
+        console.log("MAE =", MAE)
+        console.log("Execution time = ", finalTime, "\n")
     }
 
     
@@ -388,12 +402,16 @@ function testNeighboursAboveThreshold(users, items, ratingsMatrix, meanMap, simM
     console.log("-----------------------------------------------------------")
 
     for(let j = 0; j < THRESHOLDS.length; ++j){
+        let startTime = performance.now();
         let t = THRESHOLDS[j]
         let [predMatrix, predCount] = populatePredMatrix(users, items, ratingsMatrix, meanMap, simMatrix, null, t, hasNegativeSims)
         let MAE = calculateMAE(predMatrix, ratingsMatrix, predCount) 
+        let endTime = performance.now();
+        let finalTime = (endTime - startTime)/1000;
         console.log("Threshold:", t)
         console.log("Total predictions", predCount)
-        console.log("MAE =", MAE, "\n")
+        console.log("MAE =", MAE)
+        console.log("Execution time = ", finalTime, "\n")
     }
 }
 
